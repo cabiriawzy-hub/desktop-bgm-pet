@@ -7,6 +7,7 @@ import { ResizeHandle } from './ResizeHandle';
 import { EmptyState } from './EmptyState';
 import { ControlBar } from './ControlBar';
 import { ContextMenu } from './ContextMenu';
+import { DragLayer } from './DragLayer';
 
 export function ExpandedPlayer() {
   const [hover, setHover] = useState(false);
@@ -40,6 +41,7 @@ export function ExpandedPlayer() {
         ) : (
           <>
             {currentBvid && <BilibiliFrame bvid={currentBvid} epoch={playEpoch} />}
+            <DragLayer />
             <div style={{
               opacity: hover ? 1 : 0,
               transition: 'opacity 0.25s',

@@ -1,5 +1,5 @@
 // src/main/ipc.ts
-import { ipcMain, app, net } from 'electron';
+import { ipcMain, app } from 'electron';
 import { randomUUID } from 'crypto';
 import { IPC } from '../shared/ipc-channels';
 import type {
@@ -20,7 +20,7 @@ export function registerIpcHandlers(opts: {
 
   ipcMain.handle(IPC.AddSource, async (_e, { url }: AddSourcePayload) => {
     const { mid, seasonId } = parseSeasonURL(url);
-    const data = await fetchSeasonArchives(mid, seasonId, net.fetch as any);
+    const data = await fetchSeasonArchives(mid, seasonId, fetch);
     return setConfig(cfg => {
       const newSource = {
         id: randomUUID(),
@@ -51,7 +51,7 @@ export function registerIpcHandlers(opts: {
     const cfg = getConfig();
     const src = cfg.sources.find(s => s.id === id);
     if (!src) throw new Error('source not found');
-    const data = await fetchSeasonArchives(src.mid, src.seasonId, net.fetch as any);
+    const data = await fetchSeasonArchives(src.mid, src.seasonId, fetch);
     return setConfig(cfg => ({
       ...cfg,
       sources: cfg.sources.map(s =>
