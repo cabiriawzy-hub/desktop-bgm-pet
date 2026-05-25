@@ -92,6 +92,29 @@ export function ContextMenu({ x, y, onClose }: Props) {
         </div>
       )}
       <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '4px 0' }}>
+        <div style={labelStyle}>形象</div>
+        <div style={{ display: 'flex', gap: 4, padding: '2px 8px 4px', flexWrap: 'wrap' }}>
+          {['🪩', '🎧', '📻', '💿', '🎵', '🎶', '🎹', '🎷', '🎸', '🎺', '🥁', '🐱', '🦊', '🐧', '👾'].map(e => (
+            <button
+              key={e}
+              onClick={async () => {
+                const cfg = await api.setEmoji({ emoji: e });
+                setConfig(cfg);
+                onClose();
+              }}
+              title={e}
+              style={{
+                width: 28, height: 28, borderRadius: 6,
+                background: e === config.petEmoji ? 'rgba(92,182,255,0.2)' : 'rgba(255,255,255,0.05)',
+                border: e === config.petEmoji ? '1px solid #5cb6ff' : '1px solid transparent',
+                fontSize: 18, lineHeight: 1, cursor: 'pointer',
+                padding: 0,
+              }}
+            >{e}</button>
+          ))}
+        </div>
+      </div>
+      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '4px 0' }}>
         <div style={labelStyle}>播放模式</div>
         {(['sequential', 'shuffle', 'loop'] as PlayMode[]).map(m => (
           <div
