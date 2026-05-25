@@ -41,20 +41,20 @@ export function ExpandedPlayer() {
           <EmptyState />
         ) : (
           <>
-            {currentBvid && !paused && <BilibiliFrame bvid={currentBvid} epoch={playEpoch} />}
+            {currentBvid && <BilibiliFrame bvid={currentBvid} epoch={playEpoch} />}
             {paused && (
               <div style={{
                 position: 'absolute', inset: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexDirection: 'column', gap: 8,
-                color: 'rgba(255,255,255,0.55)', fontSize: 14,
+                flexDirection: 'column', gap: 6,
+                color: 'rgba(255,255,255,0.6)', fontSize: 14,
                 pointerEvents: 'none',
+                background: 'rgba(0,0,0,0.35)',
+                backdropFilter: 'blur(2px)',
+                zIndex: 3,
               }}>
-                <div style={{ fontSize: 36 }}>⏸</div>
+                <div style={{ fontSize: 40 }}>⏸</div>
                 <div>暂停中</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>
-                  恢复后从这首歌开头开始
-                </div>
               </div>
             )}
             <DragLayer />

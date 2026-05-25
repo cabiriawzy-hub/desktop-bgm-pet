@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import type { Config } from '../shared/types';
 import { DEFAULT_CONFIG } from '../shared/types';
 import { api } from './api';
+import { playerRef } from './playerRef';
 
 type State = {
   config: Config;
@@ -39,10 +40,9 @@ export const useStore = create<State>((set) => ({
   triggerPlay: (config) => set(s => ({ config, playEpoch: s.playEpoch + 1, paused: false })),
   togglePaused: () => set(s => {
     const willBePaused = !s.paused;
-    return {
-      paused: willBePaused,
-      // 从暂停恢复时 bump epoch，让 iframe 重新挂载并自动播放
-      playEpoch: willBePaused ? s.playEpoch : s.playEpoch + 1,
-    };
+    // 直接调 iframe 里的 <video>：真暂停 / 真恢复，位置保留
+    if (willBePaused) playerRef.pause();
+    else playerRef.play();
+    return { paused: willBePaused };
   }),
 }));

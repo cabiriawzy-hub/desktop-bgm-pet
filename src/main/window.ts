@@ -62,6 +62,12 @@ export function createMainWindow(state: WindowState): BrowserWindow {
       contextIsolation: true,
       nodeIntegration: false,
       autoplayPolicy: 'no-user-gesture-required',
+      // 关 same-origin policy，让我们能伸手进 B 站 iframe DOM：
+      // 1) 注入 CSS 隐藏 B 站自带 chrome（"进入哔哩哔哩"等）
+      // 2) 直接 video.pause()/play()/seek 实现真·暂停 + 拖动
+      // 风险：iframe 内 JS 能反向访问 window.parent。对桌面单用户 + B 站可信源，
+      // 实际威胁≈0。商业场景请改用 <webview>/BrowserView 隔离。
+      webSecurity: false,
     },
   });
 

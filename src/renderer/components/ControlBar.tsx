@@ -81,7 +81,7 @@ export function ControlBar() {
         <button
           style={{ ...btnStyle, fontSize: 20 }}
           onClick={togglePaused}
-          title={paused ? '播放（从当前歌曲开头）' : '暂停（卸载 iframe）'}
+          title={paused ? '播放' : '暂停'}
         >{paused ? '▶︎' : '⏸'}</button>
         <button style={btnStyle} onClick={playNext} title="下一首">⏭</button>
         <button style={btnStyle} onClick={cycleMode} title={`播放模式：${config.playMode}`}>

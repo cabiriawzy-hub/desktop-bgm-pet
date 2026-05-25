@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../state';
+import { playerRef } from '../playerRef';
 
 type Props = { bvid: string | null; duration: number };
 
@@ -13,20 +14,55 @@ export function ProgressBar({ bvid, duration }: Props) {
   const [elapsed, setElapsed] = useState(0);
   const paused = useStore(s => s.paused);
   const playEpoch = useStore(s => s.playEpoch);
+  const barRef = useRef<HTMLDivElement>(null);
+  const draggingRef = useRef(false);
 
-  // 切歌或者从暂停恢复（epoch bump）时重置到 0
+  // 切歌时重置
   useEffect(() => {
     setElapsed(0);
   }, [bvid, playEpoch]);
 
-  // 不在暂停时才走计时器
+  // 轮询 video.currentTime（2Hz 够细滑）
   useEffect(() => {
-    if (!bvid || paused) return;
-    const id = setInterval(() => {
-      setElapsed(e => Math.min(duration, e + 1));
-    }, 1000);
+    if (!bvid) return;
+    const tick = () => {
+      if (draggingRef.current) return;  // 拖动中不被外部时间覆盖
+      const t = playerRef.currentTime();
+      if (t > 0) setElapsed(t);
+    };
+    const id = setInterval(tick, 500);
     return () => clearInterval(id);
-  }, [bvid, duration, paused]);
+  }, [bvid, playEpoch]);
+
+  const seekTo = (clientX: number) => {
+    const rect = barRef.current?.getBoundingClientRect();
+    if (!rect || duration <= 0) return;
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const t = ratio * duration;
+    playerRef.seek(t);
+    setElapsed(t);
+  };
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    if (!playerRef.isReady()) return;
+    draggingRef.current = true;
+    seekTo(e.clientX);
+  };
+
+  // 拖拽 seek：document 监听，跑出条外也能继续
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!draggingRef.current) return;
+      seekTo(e.clientX);
+    };
+    const onUp = () => { draggingRef.current = false; };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, [duration]);
 
   const pct = duration > 0 ? (elapsed / duration) * 100 : 0;
 
@@ -35,15 +71,21 @@ export function ProgressBar({ bvid, duration }: Props) {
       <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', fontVariantNumeric: 'tabular-nums', minWidth: 36 }}>
         {formatTime(elapsed)}
       </span>
-      <div style={{
-        flex: 1, height: 4,
-        background: 'rgba(255,255,255,0.2)',
-        borderRadius: 2, position: 'relative',
-      }}>
+      <div
+        ref={barRef}
+        onMouseDown={onMouseDown}
+        style={{
+          flex: 1, height: 4,
+          background: 'rgba(255,255,255,0.2)',
+          borderRadius: 2, position: 'relative',
+          cursor: 'pointer',
+        }}
+      >
         <div style={{
-          height: '100%', background: paused ? 'rgba(255,255,255,0.4)' : '#5cb6ff',
+          height: '100%', background: paused ? 'rgba(255,255,255,0.45)' : '#5cb6ff',
           borderRadius: 2, width: `${pct}%`,
-          transition: 'width 0.3s linear',
+          transition: draggingRef.current ? 'none' : 'width 0.3s linear',
+          pointerEvents: 'none',
         }} />
       </div>
       <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', fontVariantNumeric: 'tabular-nums', minWidth: 36, textAlign: 'right' }}>
