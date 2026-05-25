@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react';
 import { useStore } from '../state';
 import { api } from '../api';
-import { IconFold } from './icons';
+import { IconFold, IconClose } from './icons';
 
 export function TitleBar() {
   const sources = useStore(s => s.config.sources);
@@ -80,8 +80,19 @@ export function TitleBar() {
           cursor: 'pointer', padding: 0,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}
-        title="收起"
+        title="收起为图标"
       ><IconFold size={12} strokeWidth={2} /></button>
+      <button
+        onClick={() => api.quit()}
+        style={{
+          width: 20, height: 20, borderRadius: '50%',
+          background: 'rgba(255,90,90,0.2)', border: 'none',
+          color: 'rgba(255,170,170,0.95)',
+          cursor: 'pointer', padding: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}
+        title="退出应用"
+      ><IconClose size={11} strokeWidth={2} /></button>
     </div>
   );
 }

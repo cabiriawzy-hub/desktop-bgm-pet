@@ -110,3 +110,11 @@ export const IconFold = ({ size = 12, strokeWidth = 2, style }: Props) => (
     <line x1="5" y1="12" x2="19" y2="12" />
   </svg>
 );
+
+// 退出按钮（标题栏右上）
+export const IconClose = ({ size = 12, strokeWidth = 2, style }: Props) => (
+  <svg {...baseSvg(size, strokeWidth, style)}>
+    <line x1="6" y1="6" x2="18" y2="18" />
+    <line x1="18" y1="6" x2="6" y2="18" />
+  </svg>
+);
