@@ -119,7 +119,7 @@ export function BilibiliFrame({ bvid, epoch }: Props) {
         border: 'none',
         display: 'flex',
         // 半透明视频：让桌面壁纸/App 背景从画面里透出来
-        opacity: 0.85,
+        opacity: 0.5,
       }}
     />
   );

@@ -20,6 +20,14 @@ export default function App() {
   useEffect(() => {
     document.documentElement.style.background = 'transparent';
     document.body.style.background = 'transparent';
+    // 诊断：打到 console，确认每层确实是透明
+    console.log('[bg debug]');
+    console.log('  html:', getComputedStyle(document.documentElement).backgroundColor);
+    console.log('  body:', getComputedStyle(document.body).backgroundColor);
+    const root = document.getElementById('root');
+    if (root) console.log('  #root:', getComputedStyle(root).backgroundColor);
+    console.log('  window inner:', window.innerWidth, '×', window.innerHeight);
+    console.log('  devicePixelRatio:', window.devicePixelRatio);
   }, []);
 
   if (!ready) return null;
