@@ -11,13 +11,14 @@ import { pickNext } from './playback';
 export function useAutoAdvance() {
   const config = useStore(s => s.config);
   const triggerPlay = useStore(s => s.triggerPlay);
+  const paused = useStore(s => s.paused);
   const currentBvid = config.currentBvid;
   const currentSource = config.sources.find(s => s.id === config.currentSourceId);
   const currentVideo = currentSource?.videos.find(v => v.bvid === currentBvid);
   const duration = currentVideo?.duration ?? 0;
 
   useEffect(() => {
-    if (!currentBvid || !currentSource || duration <= 0) return;
+    if (!currentBvid || !currentSource || duration <= 0 || paused) return;
 
     // duration 是秒，加 2s buffer 防止过早切
     const ms = (duration + 2) * 1000;
@@ -31,5 +32,5 @@ export function useAutoAdvance() {
     }, ms);
 
     return () => clearTimeout(id);
-  }, [currentBvid, currentSource, duration, config.playMode, triggerPlay]);
+  }, [currentBvid, currentSource, duration, config.playMode, paused, triggerPlay]);
 }

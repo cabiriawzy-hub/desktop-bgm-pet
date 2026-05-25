@@ -15,6 +15,7 @@ export function ExpandedPlayer() {
   const sources = useStore(s => s.config.sources);
   const currentBvid = useStore(s => s.config.currentBvid);
   const playEpoch = useStore(s => s.playEpoch);
+  const paused = useStore(s => s.paused);
 
   const isEmpty = sources.length === 0;
 
@@ -40,7 +41,22 @@ export function ExpandedPlayer() {
           <EmptyState />
         ) : (
           <>
-            {currentBvid && <BilibiliFrame bvid={currentBvid} epoch={playEpoch} />}
+            {currentBvid && !paused && <BilibiliFrame bvid={currentBvid} epoch={playEpoch} />}
+            {paused && (
+              <div style={{
+                position: 'absolute', inset: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexDirection: 'column', gap: 8,
+                color: 'rgba(255,255,255,0.55)', fontSize: 14,
+                pointerEvents: 'none',
+              }}>
+                <div style={{ fontSize: 36 }}>⏸</div>
+                <div>暂停中</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>
+                  恢复后从这首歌开头开始
+                </div>
+              </div>
+            )}
             <DragLayer />
             <div style={{
               opacity: hover ? 1 : 0,

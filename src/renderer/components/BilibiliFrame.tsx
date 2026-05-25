@@ -2,7 +2,8 @@
 type Props = { bvid: string; epoch: number };
 
 export function BilibiliFrame({ bvid, epoch }: Props) {
-  const src = `//player.bilibili.com/player.html?bvid=${bvid}&autoplay=1&danmaku=0&hideCoverInfo=1`;
+  // 必须显式 https：渲染进程从 file:// 加载，协议相对 URL 会被解析成 file://player.bilibili.com
+  const src = `https://player.bilibili.com/player.html?bvid=${bvid}&autoplay=1&danmaku=0&hideCoverInfo=1`;
   return (
     <iframe
       // key 包含 epoch：换歌时 bvid 变；loop 模式同一首重播时 epoch 变。

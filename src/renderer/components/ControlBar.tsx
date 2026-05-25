@@ -23,6 +23,8 @@ export function ControlBar() {
   const config = useStore(s => s.config);
   const setConfig = useStore(s => s.setConfig);
   const triggerPlay = useStore(s => s.triggerPlay);
+  const paused = useStore(s => s.paused);
+  const togglePaused = useStore(s => s.togglePaused);
 
   const currentSource = config.sources.find(s => s.id === config.currentSourceId);
   const currentVideo = currentSource?.videos.find(v => v.bvid === config.currentBvid);
@@ -76,6 +78,11 @@ export function ControlBar() {
       <ProgressBar bvid={config.currentBvid} duration={duration} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
         <button style={btnStyle} onClick={playPrev} title="上一首">⏮</button>
+        <button
+          style={{ ...btnStyle, fontSize: 20 }}
+          onClick={togglePaused}
+          title={paused ? '播放（从当前歌曲开头）' : '暂停（卸载 iframe）'}
+        >{paused ? '▶︎' : '⏸'}</button>
         <button style={btnStyle} onClick={playNext} title="下一首">⏭</button>
         <button style={btnStyle} onClick={cycleMode} title={`播放模式：${config.playMode}`}>
           {MODE_ICON[config.playMode]}
