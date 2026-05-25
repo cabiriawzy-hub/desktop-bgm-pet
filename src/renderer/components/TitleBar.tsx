@@ -86,8 +86,7 @@ export function TitleBar() {
         onClick={() => api.quit()}
         style={{
           width: 20, height: 20, borderRadius: '50%',
-          background: 'rgba(255,90,90,0.2)', border: 'none',
-          color: 'rgba(255,170,170,0.95)',
+          background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff',
           cursor: 'pointer', padding: 0,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}
