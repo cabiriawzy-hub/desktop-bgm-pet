@@ -4,6 +4,12 @@ import { registerIpcHandlers } from './ipc';
 import { createMainWindow, setWindowMode, resizePlayer, movePlayer, setMuted, getWin } from './window';
 import { getConfig } from './store';
 
+// 必须在 app.whenReady() 之前。
+// Site Isolation 默认开，会把 B 站 iframe 隔到独立进程，导致我们拿不到 contentDocument。
+// 我们需要主帧能读跨域 iframe 的 DOM 以注入 CSS 隐藏 B 站 chrome、并控制 video 元素。
+app.commandLine.appendSwitch('disable-features', 'IsolateOrigins,site-per-process,IsolateSandboxedIframes');
+app.commandLine.appendSwitch('disable-site-isolation-trials');
+
 app.whenReady().then(() => {
   const cfg = getConfig();
   createMainWindow(cfg.windowState);

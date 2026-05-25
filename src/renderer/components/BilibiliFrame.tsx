@@ -50,34 +50,43 @@ export function BilibiliFrame({ bvid, epoch }: Props) {
   const onLoad = () => {
     const iframe = ref.current;
     if (!iframe) return;
-    const doc = iframe.contentDocument;
-    if (!doc) {
-      console.warn('iframe contentDocument is null — webSecurity 可能没关掉');
+
+    // 跨域访问可能抛 SecurityError，try/catch 一下方便排查
+    let doc: Document | null = null;
+    try {
+      doc = iframe.contentDocument;
+    } catch (err) {
+      console.error('[BilibiliFrame] 访问 contentDocument 抛错（跨域被拦）:', err);
       return;
     }
+
+    if (!doc) {
+      console.error('[BilibiliFrame] contentDocument is null —— Site Isolation 没关掉或 webSecurity 没生效');
+      return;
+    }
+
+    console.log('[BilibiliFrame] iframe loaded, doc accessible. URL:', doc.URL);
 
     // 注入 CSS 隐藏 B 站 chrome
     const style = doc.createElement('style');
     style.textContent = HIDE_CHROME_CSS;
     (doc.head || doc.documentElement).appendChild(style);
+    console.log('[BilibiliFrame] CSS injected');
 
     // 找 video 元素。B 站 player 异步加载，<video> 不一定立刻有。
     // 轮询最多 10s（B 站慢的时候真要这么久）。
     let attempts = 0;
     const findVideo = () => {
-      const v = doc.querySelector('video') as HTMLVideoElement | null;
+      const v = doc!.querySelector('video') as HTMLVideoElement | null;
       if (v) {
         playerRef.set(v);
+        console.log(`[BilibiliFrame] <video> found after ${attempts * 100}ms`);
         return;
       }
       if (++attempts < 100) setTimeout(findVideo, 100);
-      else console.warn(`找不到 iframe 里的 <video>（${attempts * 100}ms 超时）`);
+      else console.warn('[BilibiliFrame] 找不到 <video>（10s 超时）—— B 站 DOM 结构可能变了');
     };
     findVideo();
-
-    // 兜底：B 站 player 加载完之后还可能动态插入 chrome（比如悬停时），
-    // 每 1s 再补一次 CSS 应用（CSS 是常驻的，这里只是防 B 站 JS 把 style 干掉）
-    // 不开 MutationObserver，避免性能开销
   };
 
   useEffect(() => {
