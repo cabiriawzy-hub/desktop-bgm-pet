@@ -1,8 +1,5 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import App from './App';
 
-createRoot(document.getElementById('root')!).render(
-  <h1 style={{ color: 'white', fontFamily: 'sans-serif', padding: 20 }}>
-    Broadcast — hello world
-  </h1>
-);
+createRoot(document.getElementById('root')!).render(<App />);
