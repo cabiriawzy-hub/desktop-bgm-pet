@@ -71,9 +71,10 @@ export function createMainWindow(state: WindowState): BrowserWindow {
 
   win.setAlwaysOnTop(true, 'floating');
 
-  // 临时打开 devtools 方便排查 iframe 注入失败之类的问题。
-  // 不需要时把 BROADCAST_DEVTOOLS 这行注释掉或改成 if (process.env.BROADCAST_DEVTOOLS)
-  win.webContents.openDevTools({ mode: 'detach' });
+  // 想看 devtools 排查问题时：BROADCAST_DEVTOOLS=1 open dist/mac-arm64/Broadcast.app
+  if (process.env.BROADCAST_DEVTOOLS) {
+    win.webContents.openDevTools({ mode: 'detach' });
+  }
 
   if (process.env.ELECTRON_RENDERER_URL) {
     win.loadURL(process.env.ELECTRON_RENDERER_URL);
