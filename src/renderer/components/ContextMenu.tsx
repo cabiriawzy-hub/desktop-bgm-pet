@@ -17,6 +17,7 @@ export function ContextMenu({ x, y, onClose }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const config = useStore(s => s.config);
   const setConfig = useStore(s => s.setConfig);
+  const triggerPlay = useStore(s => s.triggerPlay);
 
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
@@ -30,7 +31,7 @@ export function ContextMenu({ x, y, onClose }: Props) {
     const src = config.sources.find(s => s.id === id);
     if (!src || src.videos.length === 0) return;
     const cfg = await api.setCurrent({ sourceId: id, bvid: src.videos[0].bvid });
-    setConfig(cfg);
+    triggerPlay(cfg);
     onClose();
   };
 
@@ -46,7 +47,7 @@ export function ContextMenu({ x, y, onClose }: Props) {
     const v = pickNext(src, config.currentBvid, config.playMode);
     if (v) {
       const cfg = await api.setCurrent({ sourceId: src.id, bvid: v.bvid });
-      setConfig(cfg);
+      triggerPlay(cfg);
     }
     onClose();
   };

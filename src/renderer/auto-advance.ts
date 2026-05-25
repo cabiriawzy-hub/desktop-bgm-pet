@@ -10,7 +10,7 @@ import { pickNext } from './playback';
  */
 export function useAutoAdvance() {
   const config = useStore(s => s.config);
-  const setConfig = useStore(s => s.setConfig);
+  const triggerPlay = useStore(s => s.triggerPlay);
   const currentBvid = config.currentBvid;
   const currentSource = config.sources.find(s => s.id === config.currentSourceId);
   const currentVideo = currentSource?.videos.find(v => v.bvid === currentBvid);
@@ -24,11 +24,12 @@ export function useAutoAdvance() {
     const id = setTimeout(async () => {
       const v = pickNext(currentSource, currentBvid, config.playMode);
       if (v) {
+        // triggerPlay bump epoch，loop 模式同一首也能重新加载
         const cfg = await api.setCurrent({ sourceId: currentSource.id, bvid: v.bvid });
-        setConfig(cfg);
+        triggerPlay(cfg);
       }
     }, ms);
 
     return () => clearTimeout(id);
-  }, [currentBvid, currentSource, duration, config.playMode, setConfig]);
+  }, [currentBvid, currentSource, duration, config.playMode, triggerPlay]);
 }

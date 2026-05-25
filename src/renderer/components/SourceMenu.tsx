@@ -11,20 +11,24 @@ export function SourceMenu({ onClose }: Props) {
   const sources = useStore(s => s.config.sources);
   const currentSourceId = useStore(s => s.config.currentSourceId);
   const setConfig = useStore(s => s.setConfig);
+  const triggerPlay = useStore(s => s.triggerPlay);
 
   const onPick = async (sourceId: string) => {
     const src = sources.find(s => s.id === sourceId);
     if (!src || src.videos.length === 0) return;
     const cfg = await api.setCurrent({ sourceId, bvid: src.videos[0].bvid });
-    setConfig(cfg);
+    triggerPlay(cfg);
     onClose();
   };
 
   const onAdd = async () => {
     setError(null);
     try {
+      const prevCurrent = useStore.getState().config.currentBvid;
       const cfg = await api.addSource({ url: url.trim() });
-      setConfig(cfg);
+      // 如果之前没有正在播放的，AddSource 会自动选中新合集第一首，需要 bump epoch 启动播放
+      if (!prevCurrent && cfg.currentBvid) triggerPlay(cfg);
+      else setConfig(cfg);
       setUrl('');
       setAdding(false);
     } catch (e: any) {

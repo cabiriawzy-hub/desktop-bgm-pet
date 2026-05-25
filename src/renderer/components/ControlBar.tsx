@@ -22,6 +22,7 @@ export function ControlBar() {
   const [showSource, setShowSource] = useState(false);
   const config = useStore(s => s.config);
   const setConfig = useStore(s => s.setConfig);
+  const triggerPlay = useStore(s => s.triggerPlay);
 
   const currentSource = config.sources.find(s => s.id === config.currentSourceId);
   const currentVideo = currentSource?.videos.find(v => v.bvid === config.currentBvid);
@@ -32,7 +33,7 @@ export function ControlBar() {
     const v = pickNext(currentSource, config.currentBvid, config.playMode);
     if (v) {
       const cfg = await api.setCurrent({ sourceId: currentSource.id, bvid: v.bvid });
-      setConfig(cfg);
+      triggerPlay(cfg);
     }
   };
 
@@ -41,7 +42,7 @@ export function ControlBar() {
     const v = pickPrev(currentSource, config.currentBvid, config.playMode);
     if (v) {
       const cfg = await api.setCurrent({ sourceId: currentSource.id, bvid: v.bvid });
-      setConfig(cfg);
+      triggerPlay(cfg);
     }
   };
 

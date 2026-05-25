@@ -7,7 +7,7 @@ export function EmptyState() {
   const [url, setUrl] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const setConfig = useStore(s => s.setConfig);
+  const triggerPlay = useStore(s => s.triggerPlay);
 
   const onAdd = async () => {
     if (!url.trim()) return;
@@ -16,7 +16,8 @@ export function EmptyState() {
     try {
       // AddSource IPC handler 内部已经处理「无 current 时自动选中第一首」
       const cfg = await api.addSource({ url: url.trim() });
-      setConfig(cfg);
+      // 空状态进来时一定没有 current，这里加完一定会有，bump epoch 启动播放
+      triggerPlay(cfg);
     } catch (e: any) {
       setError(e.message || String(e));
     } finally {

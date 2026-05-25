@@ -13,6 +13,7 @@ export function ExpandedPlayer() {
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   const sources = useStore(s => s.config.sources);
   const currentBvid = useStore(s => s.config.currentBvid);
+  const playEpoch = useStore(s => s.playEpoch);
 
   const isEmpty = sources.length === 0;
 
@@ -38,7 +39,7 @@ export function ExpandedPlayer() {
           <EmptyState />
         ) : (
           <>
-            {currentBvid && <BilibiliFrame bvid={currentBvid} />}
+            {currentBvid && <BilibiliFrame bvid={currentBvid} epoch={playEpoch} />}
             <div style={{
               opacity: hover ? 1 : 0,
               transition: 'opacity 0.25s',
