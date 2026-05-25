@@ -1,31 +1,31 @@
-import { app, BrowserWindow } from 'electron';
-import { join } from 'path';
+// src/main/index.ts
+import { app } from 'electron';
 import { registerIpcHandlers } from './ipc';
+import { createMainWindow, setWindowMode, resizePlayer, movePlayer, setMuted, getWin } from './window';
+import { getConfig } from './store';
 
 app.whenReady().then(() => {
+  const cfg = getConfig();
+  createMainWindow(cfg.windowState);
+
   registerIpcHandlers({
-    onSetWindowMode: () => {},      // Task 6 填
-    onUpdateGeometry: () => {},     // Task 6 填
-    onSetMuted: () => {},           // Task 6 填
-  });
-
-  const win = new BrowserWindow({
-    width: 360,
-    height: 240,
-    webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
-      contextIsolation: true,
-      nodeIntegration: false,
+    onSetWindowMode: (mode) => setWindowMode(mode, getConfig()),
+    onUpdateGeometry: (p) => {
+      if (p.playerSize) resizePlayer(p.playerSize.w, p.playerSize.h);
+      const pos = p.petPos ?? p.playerPos;
+      if (pos) movePlayer(pos.x, pos.y);
     },
+    onSetMuted: (muted) => setMuted(muted),
   });
-
-  if (process.env.ELECTRON_RENDERER_URL) {
-    win.loadURL(process.env.ELECTRON_RENDERER_URL);
-  } else {
-    win.loadFile(join(__dirname, '../renderer/index.html'));
-  }
 });
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
+});
+
+// macOS：dock 图标点击重新打开窗口
+app.on('activate', () => {
+  if (!getWin()) {
+    createMainWindow(getConfig().windowState);
+  }
 });
