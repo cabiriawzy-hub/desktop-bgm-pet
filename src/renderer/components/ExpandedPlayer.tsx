@@ -16,6 +16,7 @@ export function ExpandedPlayer() {
   const currentBvid = useStore(s => s.config.currentBvid);
   const playEpoch = useStore(s => s.playEpoch);
   const paused = useStore(s => s.paused);
+  const togglePaused = useStore(s => s.togglePaused);
 
   const isEmpty = sources.length === 0;
 
@@ -43,18 +44,29 @@ export function ExpandedPlayer() {
           <>
             {currentBvid && <BilibiliFrame bvid={currentBvid} epoch={playEpoch} />}
             {paused && (
-              <div style={{
-                position: 'absolute', inset: 0,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexDirection: 'column', gap: 6,
-                color: 'rgba(255,255,255,0.6)', fontSize: 14,
-                pointerEvents: 'none',
-                background: 'rgba(0,0,0,0.35)',
-                backdropFilter: 'blur(2px)',
-                zIndex: 3,
-              }}>
-                <div style={{ fontSize: 40 }}>⏸</div>
-                <div>暂停中</div>
+              <div
+                onClick={togglePaused}
+                style={{
+                  position: 'absolute', inset: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer',
+                  background: 'rgba(0,0,0,0.35)',
+                  backdropFilter: 'blur(2px)',
+                  zIndex: 3,
+                }}
+                title="点击播放"
+              >
+                <div style={{
+                  width: 80, height: 80, borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.15)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 32, color: 'rgba(255,255,255,0.95)',
+                  paddingLeft: 6,  // 视觉上 ▶︎ 重心偏左，留点 padding 让它看着居中
+                }}>
+                  ▶︎
+                </div>
               </div>
             )}
             <DragLayer />
