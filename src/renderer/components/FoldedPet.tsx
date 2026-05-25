@@ -6,7 +6,6 @@ import { ContextMenu } from './ContextMenu';
 
 export function FoldedPet() {
   const emoji = useStore(s => s.config.petEmoji);
-  const hasSource = useStore(s => s.config.sources.length > 0);
   const setConfig = useStore(s => s.setConfig);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
 
@@ -76,23 +75,10 @@ export function FoldedPet() {
         }}
       >
         {emoji}
-        {hasSource && (
-          <span style={{
-            position: 'absolute', top: 12, right: 12,
-            width: 10, height: 10, borderRadius: '50%',
-            background: '#ff5a5a',
-            boxShadow: '0 0 0 2px rgba(0,0,0,0.4), 0 0 12px rgba(255,90,90,0.8)',
-            animation: 'pulse 1.5s ease-in-out infinite',
-          }} />
-        )}
         <style>{`
           @keyframes bob {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-4px); }
-          }
-          @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
           }
         `}</style>
       </div>
