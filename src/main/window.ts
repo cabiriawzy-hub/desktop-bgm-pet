@@ -51,6 +51,9 @@ export function createMainWindow(state: WindowState): BrowserWindow {
     y: pos.y,
     frame: false,
     transparent: true,
+    // backgroundColor 默认是 #FFFFFF（白），transparent:true 在 macOS 上偶尔
+    // 漏底。显式设全透明黑 ARGB=#00000000 防止白底渗出来。
+    backgroundColor: '#00000000',
     resizable: false,        // 自己控制 resize，禁掉系统的
     hasShadow: false,
     alwaysOnTop: true,
