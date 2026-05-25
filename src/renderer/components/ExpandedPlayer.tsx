@@ -5,6 +5,7 @@ import { BilibiliFrame } from './BilibiliFrame';
 import { TitleBar } from './TitleBar';
 import { ResizeHandle } from './ResizeHandle';
 import { EmptyState } from './EmptyState';
+import { ControlBar } from './ControlBar';
 
 export function ExpandedPlayer() {
   const [hover, setHover] = useState(false);
@@ -37,7 +38,7 @@ export function ExpandedPlayer() {
             pointerEvents: hover ? 'auto' : 'none',
           }}>
             <TitleBar />
-            {/* ControlBar 在 Task 10 加 */}
+            <ControlBar />
           </div>
           <ResizeHandle />
         </>
