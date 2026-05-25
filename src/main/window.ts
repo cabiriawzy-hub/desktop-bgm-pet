@@ -51,13 +51,18 @@ export function createMainWindow(state: WindowState): BrowserWindow {
     y: pos.y,
     frame: false,
     transparent: true,
-    // backgroundColor 默认是 #FFFFFF（白），transparent:true 在 macOS 上偶尔
-    // 漏底。显式设全透明黑 ARGB=#00000000 防止白底渗出来。
     backgroundColor: '#00000000',
-    resizable: false,        // 自己控制 resize，禁掉系统的
+    resizable: false,
     hasShadow: false,
     alwaysOnTop: true,
     skipTaskbar: false,
+    // 禁掉 macOS 圆角自动应用——它会在窗口边缘绘制一圈微妙的描边
+    roundedCorners: false,
+    // 没显式给 vibrancy，但有些 Electron 33 版本默认会附加；强制 undefined
+    vibrancy: undefined,
+    visualEffectState: 'inactive',
+    // 不要按系统的 "Reduce transparency" 把窗口变不透明
+    titleBarStyle: 'default',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
