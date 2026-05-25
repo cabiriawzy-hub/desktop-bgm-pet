@@ -1,7 +1,6 @@
 // src/renderer/components/ExpandedPlayer.tsx
 import { useState } from 'react';
 import { useStore } from '../state';
-import { BilibiliFrame } from './BilibiliFrame';
 import { TitleBar } from './TitleBar';
 import { ResizeHandle } from './ResizeHandle';
 import { EmptyState } from './EmptyState';
@@ -14,8 +13,6 @@ export function ExpandedPlayer() {
   const [hover, setHover] = useState(false);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   const sources = useStore(s => s.config.sources);
-  const currentBvid = useStore(s => s.config.currentBvid);
-  const playEpoch = useStore(s => s.playEpoch);
   const paused = useStore(s => s.paused);
   const togglePaused = useStore(s => s.togglePaused);
 
@@ -27,26 +24,27 @@ export function ExpandedPlayer() {
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
         onContextMenu={(e) => {
-          // iframe 区域的右键会被 iframe 吃掉，只有 hover 控件层时这里能捕获
           e.preventDefault();
           setMenu({ x: e.clientX, y: e.clientY });
         }}
         style={{
           width: '100%', height: '100%',
           borderRadius: 16,
-          // 磨砂玻璃：半透明深色 + backdrop blur，让桌面壁纸隐约透出来
-          background: 'rgba(10, 10, 20, 0.55)',
-          backdropFilter: 'blur(30px) saturate(160%)',
-          WebkitBackdropFilter: 'blur(30px) saturate(160%)',
+          // 透明外壳——video 在更底层（App.tsx 渲染），上面叠的只是控件层
+          background: 'transparent',
           boxShadow: '0 16px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.08)',
           overflow: 'hidden', position: 'relative',
+          // 关键：让 mouse 事件穿透到下面的 webview（iframe 才能播）
+          // 但子元素（DragLayer/TitleBar/ControlBar）显式 auto 收回事件
+          pointerEvents: 'none',
         }}
       >
         {isEmpty ? (
-          <EmptyState />
+          <div style={{ pointerEvents: 'auto', width: '100%', height: '100%' }}>
+            <EmptyState />
+          </div>
         ) : (
           <>
-            {currentBvid && <BilibiliFrame bvid={currentBvid} epoch={playEpoch} />}
             {paused && (
               <div
                 onClick={togglePaused}
@@ -57,6 +55,7 @@ export function ExpandedPlayer() {
                   background: 'rgba(0,0,0,0.35)',
                   backdropFilter: 'blur(2px)',
                   zIndex: 3,
+                  pointerEvents: 'auto',
                 }}
                 title="点击播放"
               >
@@ -67,13 +66,15 @@ export function ExpandedPlayer() {
                   border: '1px solid rgba(255,255,255,0.2)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   color: 'rgba(255,255,255,0.95)',
-                  paddingLeft: 4,  // ▶ 重心偏左，留点 padding 让它看着居中
+                  paddingLeft: 4,
                 }}>
                   <IconPlay size={32} strokeWidth={1.5} />
                 </div>
               </div>
             )}
-            <DragLayer />
+            <div style={{ pointerEvents: 'auto' }}>
+              <DragLayer />
+            </div>
             <div style={{
               opacity: hover ? 1 : 0,
               transition: 'opacity 0.25s',
@@ -82,7 +83,9 @@ export function ExpandedPlayer() {
               <TitleBar />
               <ControlBar />
             </div>
-            <ResizeHandle />
+            <div style={{ pointerEvents: 'auto' }}>
+              <ResizeHandle />
+            </div>
           </>
         )}
       </div>

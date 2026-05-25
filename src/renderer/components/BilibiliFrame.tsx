@@ -118,7 +118,8 @@ export function BilibiliFrame({ bvid, epoch }: Props) {
         height: '100%',
         border: 'none',
         display: 'flex',
-        background: '#000',
+        // 半透明视频：让桌面壁纸/App 背景从画面里透出来
+        opacity: 0.85,
       }}
     />
   );

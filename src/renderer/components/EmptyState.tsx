@@ -28,8 +28,10 @@ export function EmptyState() {
   return (
     <div style={{
       width: '100%', height: '100%',
-      // 透明 —— 外层 ExpandedPlayer 已经给了磨砂玻璃背景
-      background: 'transparent',
+      // 空状态时没有视频在底下，自己提供磨砂玻璃背景
+      background: 'rgba(10, 10, 20, 0.55)',
+      backdropFilter: 'blur(30px) saturate(160%)',
+      WebkitBackdropFilter: 'blur(30px) saturate(160%)',
       borderRadius: 16,
       display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
