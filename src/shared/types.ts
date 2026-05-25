@@ -21,6 +21,7 @@ export type Source = {
 export type WindowState = {
   mode: 'folded' | 'expanded';
   petPos: { x: number; y: number };
+  petSize: number;
   playerPos: { x: number; y: number };
   playerSize: { w: number; h: number };
 };
@@ -45,6 +46,7 @@ export const DEFAULT_CONFIG: Config = {
   windowState: {
     mode: 'folded',
     petPos: { x: -1, y: -1 },    // -1 表示"未设置"，启动时归位到屏幕中心
+    petSize: 80,
     playerPos: { x: -1, y: -1 },
     playerSize: { w: 360, h: 240 },
   },

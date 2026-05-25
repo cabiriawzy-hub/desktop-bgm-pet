@@ -3,8 +3,6 @@ import { BrowserWindow, screen } from 'electron';
 import { join } from 'path';
 import type { Config, WindowState } from '../shared/types';
 
-const PET_SIZE = 80;
-
 let win: BrowserWindow | null = null;
 let currentMode: 'folded' | 'expanded' = 'folded';
 
@@ -41,7 +39,7 @@ function clampPosition(
 export function createMainWindow(state: WindowState): BrowserWindow {
   currentMode = state.mode;
   const size = state.mode === 'folded'
-    ? { w: PET_SIZE, h: PET_SIZE }
+    ? { w: state.petSize, h: state.petSize }
     : state.playerSize;
   const rawPos = state.mode === 'folded' ? state.petPos : state.playerPos;
   const pos = clampPosition(rawPos, size);
@@ -94,12 +92,13 @@ export function setWindowMode(mode: 'folded' | 'expanded', config: Config) {
   const cy = b.y + b.height / 2;
 
   if (mode === 'folded') {
-    // 以播放器中心为锚 → 折叠到 80×80
+    // 以播放器中心为锚 → 折叠到 petSize
+    const ps = config.windowState.petSize;
     const pos = clampPosition(
-      { x: Math.round(cx - PET_SIZE / 2), y: Math.round(cy - PET_SIZE / 2) },
-      { w: PET_SIZE, h: PET_SIZE }
+      { x: Math.round(cx - ps / 2), y: Math.round(cy - ps / 2) },
+      { w: ps, h: ps }
     );
-    win.setBounds({ x: pos.x, y: pos.y, width: PET_SIZE, height: PET_SIZE }, false);
+    win.setBounds({ x: pos.x, y: pos.y, width: ps, height: ps }, false);
   } else {
     // 以宠物中心为锚 → 展开到上次记忆的尺寸
     const size = config.windowState.playerSize;
@@ -115,6 +114,20 @@ export function resizePlayer(w: number, h: number) {
   if (!win || currentMode !== 'expanded') return;
   const b = win.getBounds();
   win.setBounds({ x: b.x, y: b.y, width: w, height: h }, false);
+}
+
+/** 折叠态调宠物大小，以当前中心为锚向外缩放 */
+export function resizePet(s: number) {
+  if (!win || currentMode !== 'folded') return;
+  const b = win.getBounds();
+  const cx = b.x + b.width / 2;
+  const cy = b.y + b.height / 2;
+  win.setBounds({
+    x: Math.round(cx - s / 2),
+    y: Math.round(cy - s / 2),
+    width: s,
+    height: s,
+  }, false);
 }
 
 export function movePlayer(x: number, y: number) {

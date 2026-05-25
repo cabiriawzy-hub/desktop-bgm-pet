@@ -1,7 +1,7 @@
 // src/main/index.ts
 import { app } from 'electron';
 import { registerIpcHandlers } from './ipc';
-import { createMainWindow, setWindowMode, resizePlayer, movePlayer, setMuted, getWin } from './window';
+import { createMainWindow, setWindowMode, resizePlayer, resizePet, movePlayer, setMuted, getWin } from './window';
 import { getConfig } from './store';
 
 app.whenReady().then(() => {
@@ -12,6 +12,7 @@ app.whenReady().then(() => {
     onSetWindowMode: (mode) => setWindowMode(mode, getConfig()),
     onUpdateGeometry: (p) => {
       if (p.playerSize) resizePlayer(p.playerSize.w, p.playerSize.h);
+      if (p.petSize) resizePet(p.petSize);
       const pos = p.petPos ?? p.playerPos;
       if (pos) movePlayer(pos.x, pos.y);
     },

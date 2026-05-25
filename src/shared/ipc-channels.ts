@@ -23,6 +23,7 @@ export type SetEmojiPayload = { emoji: string };
 export type SetWindowModePayload = { mode: 'folded' | 'expanded' };
 export type UpdateWindowGeometryPayload = {
   petPos?: { x: number; y: number };
+  petSize?: number;
   playerPos?: { x: number; y: number };
   playerSize?: { w: number; h: number };
 };

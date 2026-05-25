@@ -4,8 +4,13 @@ import { useStore } from '../state';
 import { api } from '../api';
 import { ContextMenu } from './ContextMenu';
 
+const PET_MIN = 48;
+const PET_MAX = 200;
+const PET_STEP = 8;
+
 export function FoldedPet() {
   const emoji = useStore(s => s.config.petEmoji);
+  const petSize = useStore(s => s.config.windowState.petSize);
   const setConfig = useStore(s => s.setConfig);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
 
@@ -60,17 +65,29 @@ export function FoldedPet() {
     setMenu({ x: e.clientX, y: e.clientY });
   };
 
+  // 滚轮调大小：向上 = 变大，向下 = 变小
+  const onWheel = (e: React.WheelEvent) => {
+    const cfg = useStore.getState().config;
+    const cur = cfg.windowState.petSize;
+    const delta = e.deltaY < 0 ? PET_STEP : -PET_STEP;
+    const next = Math.max(PET_MIN, Math.min(PET_MAX, cur + delta));
+    if (next === cur) return;
+    // 乐观更新：先改 store 让 emoji 立刻按比例变大，再发 IPC 让窗口跟上
+    setConfig({ ...cfg, windowState: { ...cfg.windowState, petSize: next } });
+    api.updateWindowGeometry({ petSize: next });
+  };
+
   return (
     <>
       <div
         onMouseDown={onMouseDown}
         onContextMenu={onContextMenu}
+        onWheel={onWheel}
         style={{
-          width: 80, height: 80,
+          width: '100%', height: '100%',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 56, cursor: 'grab', userSelect: 'none',
+          fontSize: petSize * 0.72, cursor: 'grab', userSelect: 'none',
           position: 'relative',
-          filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.55))',
           animation: 'bob 4s ease-in-out infinite',
         }}
       >

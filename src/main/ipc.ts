@@ -89,6 +89,7 @@ export function registerIpcHandlers(opts: {
       windowState: {
         ...cfg.windowState,
         petPos: p.petPos ?? cfg.windowState.petPos,
+        petSize: p.petSize ?? cfg.windowState.petSize,
         playerPos: p.playerPos ?? cfg.windowState.playerPos,
         playerSize: p.playerSize ?? cfg.windowState.playerSize,
       },
