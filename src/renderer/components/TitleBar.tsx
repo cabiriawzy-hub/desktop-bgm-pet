@@ -56,7 +56,7 @@ export function TitleBar() {
       onMouseDown={onMouseDown}
       style={{
         height: 32,
-        background: 'linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%)',
+        background: 'linear-gradient(180deg, rgba(0,0,0,0.45) 0%, transparent 100%)',
         display: 'flex',
         alignItems: 'center',
         padding: '0 12px',

@@ -28,7 +28,8 @@ export function EmptyState() {
   return (
     <div style={{
       width: '100%', height: '100%',
-      background: '#0a0a14',
+      // 透明 —— 外层 ExpandedPlayer 已经给了磨砂玻璃背景
+      background: 'transparent',
       borderRadius: 16,
       display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',

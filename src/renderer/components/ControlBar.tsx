@@ -82,7 +82,7 @@ export function ControlBar() {
       style={{
         position: 'absolute',
         bottom: 0, left: 0, right: 0,
-        background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.8) 40%)',
+        background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.5) 40%)',
         padding: '8px 12px 10px',
         zIndex: 5,
       }}

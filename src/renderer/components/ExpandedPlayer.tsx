@@ -34,8 +34,11 @@ export function ExpandedPlayer() {
         style={{
           width: '100%', height: '100%',
           borderRadius: 16,
-          background: '#0a0a14',
-          boxShadow: '0 16px 48px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)',
+          // 磨砂玻璃：半透明深色 + backdrop blur，让桌面壁纸隐约透出来
+          background: 'rgba(10, 10, 20, 0.55)',
+          backdropFilter: 'blur(30px) saturate(160%)',
+          WebkitBackdropFilter: 'blur(30px) saturate(160%)',
+          boxShadow: '0 16px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.08)',
           overflow: 'hidden', position: 'relative',
         }}
       >
