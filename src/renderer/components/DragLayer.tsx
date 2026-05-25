@@ -1,14 +1,16 @@
 // src/renderer/components/DragLayer.tsx
 import { useEffect, useRef } from 'react';
 import { api } from '../api';
+import { useStore } from '../state';
 
 /**
  * 透明 drag 层。盖在 iframe 上面、控件下面（zIndex 2，control bar 是 5+）。
- * 在 iframe 上的任意位置按下鼠标都能拖动整个播放器窗口。
- * iframe 因此收不到点击/拖拽（但本来 B 站播放器也不需要用户在里面点）。
+ * 任意位置按下鼠标都能拖动整个播放器窗口。
+ * 双击切换播放/暂停（YouTube/VLC 习惯）。
  */
 export function DragLayer() {
   const dragState = useRef({ down: false, startX: 0, startY: 0, startScreenX: 0, startScreenY: 0 });
+  const togglePaused = useStore(s => s.togglePaused);
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
@@ -44,6 +46,7 @@ export function DragLayer() {
   return (
     <div
       onMouseDown={onMouseDown}
+      onDoubleClick={togglePaused}
       style={{
         position: 'absolute',
         inset: 0,
