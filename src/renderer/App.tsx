@@ -1,6 +1,7 @@
 // src/renderer/App.tsx
 import { useEffect } from 'react';
 import { useStore } from './state';
+import { FoldedPet } from './components/FoldedPet';
 
 export default function App() {
   const ready = useStore(s => s.ready);
@@ -11,5 +12,5 @@ export default function App() {
 
   if (!ready) return null;
 
-  return mode === 'folded' ? <div>folded stub</div> : <div>expanded stub</div>;
+  return mode === 'folded' ? <FoldedPet /> : <div>expanded stub</div>;
 }
