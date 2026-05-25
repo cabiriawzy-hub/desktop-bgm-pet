@@ -8,6 +8,7 @@ import { EmptyState } from './EmptyState';
 import { ControlBar } from './ControlBar';
 import { ContextMenu } from './ContextMenu';
 import { DragLayer } from './DragLayer';
+import { IconPlay } from './icons';
 
 export function ExpandedPlayer() {
   const [hover, setHover] = useState(false);
@@ -62,10 +63,10 @@ export function ExpandedPlayer() {
                   backdropFilter: 'blur(8px)',
                   border: '1px solid rgba(255,255,255,0.2)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 32, color: 'rgba(255,255,255,0.95)',
-                  paddingLeft: 6,  // 视觉上 ▶︎ 重心偏左，留点 padding 让它看着居中
+                  color: 'rgba(255,255,255,0.95)',
+                  paddingLeft: 4,  // ▶ 重心偏左，留点 padding 让它看着居中
                 }}>
-                  ▶︎
+                  <IconPlay size={32} strokeWidth={1.5} />
                 </div>
               </div>
             )}

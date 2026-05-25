@@ -1,15 +1,20 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useStore } from '../state';
 import { api } from '../api';
 import { ProgressBar } from './ProgressBar';
 import { SourceMenu } from './SourceMenu';
 import { pickNext, pickPrev } from '../playback';
 import type { PlayMode } from '../../shared/types';
+import {
+  IconPrev, IconNext, IconPlay, IconPause,
+  IconSequential, IconShuffle, IconLoop,
+  IconVolume, IconMute, IconLibrary,
+} from './icons';
 
-const MODE_ICON: Record<PlayMode, string> = {
-  sequential: '➡️',
-  shuffle: '🔀',
-  loop: '🔂',
+const MODE_ICON: Record<PlayMode, ReactNode> = {
+  sequential: <IconSequential />,
+  shuffle: <IconShuffle />,
+  loop: <IconLoop />,
 };
 
 const MODE_NEXT: Record<PlayMode, PlayMode> = {
@@ -59,9 +64,16 @@ export function ControlBar() {
   };
 
   const btnStyle: React.CSSProperties = {
-    background: 'none', border: 'none', color: 'rgba(255,255,255,0.9)',
-    fontSize: 16, cursor: 'pointer', padding: '4px 7px', borderRadius: 5,
-    lineHeight: 1,
+    background: 'none', border: 'none',
+    color: 'rgba(255,255,255,0.85)',
+    cursor: 'pointer',
+    padding: '6px',
+    borderRadius: 6,
+    lineHeight: 0,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'background 0.15s, color 0.15s',
   };
 
   return (
@@ -76,26 +88,26 @@ export function ControlBar() {
       }}
     >
       <ProgressBar bvid={config.currentBvid} duration={duration} />
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
-        <button style={btnStyle} onClick={playPrev} title="上一首">⏮</button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
+        <button style={btnStyle} onClick={playPrev} title="上一首"><IconPrev /></button>
         <button
-          style={{ ...btnStyle, fontSize: 20 }}
+          style={btnStyle}
           onClick={togglePaused}
           title={paused ? '播放' : '暂停'}
-        >{paused ? '▶︎' : '⏸'}</button>
-        <button style={btnStyle} onClick={playNext} title="下一首">⏭</button>
+        >{paused ? <IconPlay /> : <IconPause />}</button>
+        <button style={btnStyle} onClick={playNext} title="下一首"><IconNext /></button>
         <button style={btnStyle} onClick={cycleMode} title={`播放模式：${config.playMode}`}>
           {MODE_ICON[config.playMode]}
         </button>
         <div style={{ flex: 1 }} />
         <button style={btnStyle} onClick={toggleMute} title={config.muted ? '取消静音' : '静音'}>
-          {config.muted ? '🔇' : '🔊'}
+          {config.muted ? <IconMute /> : <IconVolume />}
         </button>
         <button
           style={btnStyle}
           onClick={(e) => { e.stopPropagation(); setShowSource(v => !v); }}
           title="切换合集"
-        >📂</button>
+        ><IconLibrary /></button>
       </div>
       {showSource && <SourceMenu onClose={() => setShowSource(false)} />}
     </div>

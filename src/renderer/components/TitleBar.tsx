@@ -2,6 +2,7 @@
 import { useEffect, useRef } from 'react';
 import { useStore } from '../state';
 import { api } from '../api';
+import { IconFold } from './icons';
 
 export function TitleBar() {
   const sources = useStore(s => s.config.sources);
@@ -76,11 +77,11 @@ export function TitleBar() {
         style={{
           width: 20, height: 20, borderRadius: '50%',
           background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff',
-          cursor: 'pointer', fontSize: 14, padding: 0,
+          cursor: 'pointer', padding: 0,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}
         title="收起"
-      >−</button>
+      ><IconFold size={12} strokeWidth={2} /></button>
     </div>
   );
 }
