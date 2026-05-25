@@ -22,16 +22,17 @@ export function ProgressBar({ bvid, duration }: Props) {
     setElapsed(0);
   }, [bvid, playEpoch]);
 
-  // 轮询 video.currentTime（2Hz 够细滑）
+  // 轮询 video.currentTime —— webview.executeJavaScript 是异步的
   useEffect(() => {
     if (!bvid) return;
-    const tick = () => {
-      if (draggingRef.current) return;  // 拖动中不被外部时间覆盖
-      const t = playerRef.currentTime();
-      if (t > 0) setElapsed(t);
+    let cancelled = false;
+    const tick = async () => {
+      if (cancelled || draggingRef.current) return;
+      const t = await playerRef.currentTime();
+      if (!cancelled && t > 0) setElapsed(t);
     };
     const id = setInterval(tick, 500);
-    return () => clearInterval(id);
+    return () => { cancelled = true; clearInterval(id); };
   }, [bvid, playEpoch]);
 
   const seekTo = (clientX: number) => {

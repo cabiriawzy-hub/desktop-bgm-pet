@@ -1,16 +1,27 @@
 // src/renderer/playerRef.ts
-// 模块级 ref，指向当前 iframe 里的 <video> 元素。
-// BilibiliFrame onLoad 后 set；ControlBar/ProgressBar/auto-advance 读。
-// webSecurity:false 后能直接拿到跨域 iframe 的 contentDocument。
+// 模块级 ref，指向当前 <webview> 元素。
+// BilibiliFrame 在 webview 'dom-ready' 后 set；其它组件用它来调 executeJavaScript。
+// executeJavaScript 是异步的（IPC 到 webview 的 webContents 再回来），
+// 所以读 currentTime 也是 Promise<number>。
 
-let videoEl: HTMLVideoElement | null = null;
+import type { WebviewTag } from 'electron';
+
+let view: WebviewTag | null = null;
 
 export const playerRef = {
-  set: (v: HTMLVideoElement | null) => { videoEl = v; },
-  get: () => videoEl,
-  pause: () => { videoEl?.pause(); },
-  play: () => { videoEl?.play().catch(() => { /* autoplay 偶尔被拒，忽略 */ }); },
-  seek: (t: number) => { if (videoEl) videoEl.currentTime = t; },
-  currentTime: () => videoEl?.currentTime ?? 0,
-  isReady: () => videoEl !== null,
+  set: (v: WebviewTag | null) => { view = v; },
+  get: () => view,
+  isReady: () => view !== null,
+  pause: () => view?.executeJavaScript('document.querySelector("video")?.pause()').catch(() => {}),
+  play: () => view?.executeJavaScript('document.querySelector("video")?.play()').catch(() => {}),
+  seek: (t: number) => view?.executeJavaScript(`(()=>{const v=document.querySelector("video");if(v)v.currentTime=${t}})()`).catch(() => {}),
+  currentTime: async (): Promise<number> => {
+    if (!view) return 0;
+    try {
+      const t = await view.executeJavaScript('document.querySelector("video")?.currentTime ?? 0');
+      return typeof t === 'number' ? t : 0;
+    } catch {
+      return 0;
+    }
+  },
 };
