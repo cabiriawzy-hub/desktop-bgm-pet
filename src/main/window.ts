@@ -56,13 +56,15 @@ export function createMainWindow(state: WindowState): BrowserWindow {
     hasShadow: false,
     alwaysOnTop: true,
     skipTaskbar: false,
-    // 禁掉 macOS 圆角自动应用——它会在窗口边缘绘制一圈微妙的描边
     roundedCorners: false,
-    // 没显式给 vibrancy，但有些 Electron 33 版本默认会附加；强制 undefined
+    // type: 'panel' 让 macOS 把窗口当 NSPanel 而非 NSWindow，
+    // 对 transparent 的处理路径不一样——Sequoia 已知更稳
+    type: 'panel',
     vibrancy: undefined,
     visualEffectState: 'inactive',
-    // 不要按系统的 "Reduce transparency" 把窗口变不透明
     titleBarStyle: 'default',
+    // 不抢焦点（panel 配套），减少 macOS 自动给窗口加背景的机会
+    focusable: true,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
