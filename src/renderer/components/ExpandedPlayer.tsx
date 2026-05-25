@@ -34,6 +34,7 @@ export function ExpandedPlayer() {
           <div style={{
             opacity: hover ? 1 : 0,
             transition: 'opacity 0.25s',
+            pointerEvents: hover ? 'auto' : 'none',
           }}>
             <TitleBar />
             {/* ControlBar 在 Task 10 加 */}
