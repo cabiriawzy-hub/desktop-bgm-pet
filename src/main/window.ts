@@ -77,6 +77,13 @@ export function createMainWindow(state: WindowState): BrowserWindow {
 
   win.setAlwaysOnTop(true, 'floating');
 
+  // Electron 33 + macOS Sequoia 的已知问题：BrowserWindow.transparent=true
+  // 仍然会让 webContents 渲染层带一个默认白底，从 transparent 窗口里漏出来。
+  // 必须在 window 创建之后再调一次 webContents.setBackgroundColor 才能彻底
+  // 关掉。空字符串等价于完全透明（不是 #00000000，那是 Electron 旧版的语法，
+  // 新版需要空串或 'transparent'）。
+  win.webContents.setBackgroundColor('#00000000');
+
   // 想看 devtools 排查问题时：BROADCAST_DEVTOOLS=1 open dist/mac-arm64/Broadcast.app
   if (process.env.BROADCAST_DEVTOOLS) {
     win.webContents.openDevTools({ mode: 'detach' });
