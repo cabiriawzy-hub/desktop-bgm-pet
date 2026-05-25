@@ -5,8 +5,11 @@ import { playerRef } from '../playerRef';
 
 type Props = { bvid: string; epoch: number };
 
-// 隐藏 B 站自带 chrome：顶部 logo/标题、UP 信息、"进入哔哩哔哩" CTA、
-// 它自己的播放控件、loading、toast、各种弹出。
+// 隐藏 B 站自带 chrome。
+// 策略：
+//   1) CSS 选择器盖一批常见类名（基础层）
+//   2) 按文字内容扫 DOM——B 站类名经常变，但 CTA 文字是稳定的（重点防御层）
+// 用 MutationObserver 应付 SPA 动态插入，每次 DOM 变化都重新跑一遍
 const HIDE_CHROME_JS = `(() => {
   const css = \`
     .bpx-player-control-wrap,
@@ -41,15 +44,38 @@ const HIDE_CHROME_JS = `(() => {
       background: #000 !important;
     }
   \`;
+  // 按文字命中后藏掉的关键短语
+  const HIDE_TEXTS = ['进入哔哩哔哩', '观看更高清', '看完整版', '打开 App', '下载客户端', '登录后免费'];
+
   const inject = () => {
-    if (document.getElementById('__broadcast_hide_chrome__')) return;
-    const s = document.createElement('style');
-    s.id = '__broadcast_hide_chrome__';
-    s.textContent = css;
-    (document.head || document.documentElement).appendChild(s);
+    // 1) CSS 一次注入即可
+    if (!document.getElementById('__broadcast_hide_chrome__')) {
+      const s = document.createElement('style');
+      s.id = '__broadcast_hide_chrome__';
+      s.textContent = css;
+      (document.head || document.documentElement).appendChild(s);
+    }
+    // 2) 按文字内容找元素藏起来。覆盖动态加载的 i18n CTA。
+    const allEls = document.querySelectorAll('a, button, div, span');
+    for (const el of allEls) {
+      if (el.dataset && el.dataset.broadcastHidden) continue;
+      const text = (el.textContent || '').trim();
+      if (!text || text.length > 50) continue;
+      const hit = HIDE_TEXTS.some(t => text.includes(t));
+      if (!hit) continue;
+      // 向上找：如果父节点只有这一个子节点，整个父节点也藏（避免留下空容器）
+      let target = el;
+      while (target.parentElement &&
+             target.parentElement.children.length === 1 &&
+             target.parentElement.tagName !== 'BODY' &&
+             target.parentElement.tagName !== 'HTML') {
+        target = target.parentElement;
+      }
+      target.style.setProperty('display', 'none', 'important');
+      target.dataset.broadcastHidden = '1';
+    }
   };
   inject();
-  // 兜底：B 站 SPA 加载完后会动态插控件，MutationObserver 保证 CSS 一直在
   new MutationObserver(inject).observe(document.documentElement, { childList: true, subtree: true });
   'injected';
 })()`;
