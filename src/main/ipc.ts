@@ -15,6 +15,7 @@ export function registerIpcHandlers(opts: {
   onSetWindowMode: (mode: 'folded' | 'expanded') => void;
   onUpdateGeometry: (p: UpdateWindowGeometryPayload) => void;
   onSetMuted: (muted: boolean) => void;
+  getBounds: () => { x: number; y: number; w: number; h: number } | null;
 }) {
   ipcMain.handle(IPC.GetConfig, () => getConfig());
 
@@ -85,16 +86,22 @@ export function registerIpcHandlers(opts: {
 
   ipcMain.handle(IPC.UpdateWindowGeometry, (_e, p: UpdateWindowGeometryPayload) => {
     opts.onUpdateGeometry(p);
-    setConfig(cfg => ({
-      ...cfg,
-      windowState: {
-        ...cfg.windowState,
-        petPos: p.petPos ?? cfg.windowState.petPos,
-        petSize: p.petSize ?? cfg.windowState.petSize,
-        playerPos: p.playerPos ?? cfg.windowState.playerPos,
-        playerSize: p.playerSize ?? cfg.windowState.playerSize,
-      },
-    }));
+    // 用窗口的真实位置写回 config（move/resize 内部做了 softClamp，
+    // 不存渲染端发来的原始坐标 —— 它可能是飞出屏的）
+    const actual = opts.getBounds();
+    setConfig(cfg => {
+      const mode = cfg.windowState.mode;
+      return {
+        ...cfg,
+        windowState: {
+          ...cfg.windowState,
+          petPos: mode === 'folded' && actual ? { x: actual.x, y: actual.y } : (p.petPos ?? cfg.windowState.petPos),
+          petSize: p.petSize ?? cfg.windowState.petSize,
+          playerPos: mode === 'expanded' && actual ? { x: actual.x, y: actual.y } : (p.playerPos ?? cfg.windowState.playerPos),
+          playerSize: p.playerSize ?? cfg.windowState.playerSize,
+        },
+      };
+    });
   });
 
   ipcMain.handle(IPC.Quit, () => app.quit());

@@ -7,7 +7,8 @@ let win: BrowserWindow | null = null;
 let currentMode: 'folded' | 'expanded' = 'folded';
 
 /**
- * 校验位置是否在某个显示器范围内，否则归位到主屏中心。
+ * 启动时用：校验位置是否在某个显示器范围内，否则归位到主屏中心。
+ * 用 -1 当 "未设置" sentinel。
  */
 function clampPosition(
   pos: { x: number; y: number },
@@ -34,6 +35,38 @@ function clampPosition(
     };
   }
   return pos;
+}
+
+/**
+ * 拖拽/缩放时用：把位置软贴在最近显示器的可视区域里，最多贴边，不会飞出屏。
+ * 比 clampPosition 温和，不会突然把窗口拽回中心。
+ */
+function softClamp(
+  pos: { x: number; y: number },
+  size: { w: number; h: number }
+): { x: number; y: number } {
+  const displays = screen.getAllDisplays();
+  // 找跟窗口中心最近的 display
+  const pcx = pos.x + size.w / 2;
+  const pcy = pos.y + size.h / 2;
+  let best = displays[0].workArea;
+  let bestDist = Infinity;
+  for (const d of displays) {
+    const a = d.workArea;
+    const ccx = a.x + a.width / 2;
+    const ccy = a.y + a.height / 2;
+    const dist = (ccx - pcx) ** 2 + (ccy - pcy) ** 2;
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = a;
+    }
+  }
+  // 至少留 24px 在屏内（防止整窗滑出导致彻底丢失）
+  const PAD = 24;
+  return {
+    x: Math.max(best.x - size.w + PAD, Math.min(best.x + best.width - PAD, pos.x)),
+    y: Math.max(best.y, Math.min(best.y + best.height - PAD, pos.y)),
+  };
 }
 
 export function createMainWindow(state: WindowState): BrowserWindow {
@@ -140,17 +173,25 @@ export function resizePet(s: number) {
   const b = win.getBounds();
   const cx = b.x + b.width / 2;
   const cy = b.y + b.height / 2;
-  win.setBounds({
-    x: Math.round(cx - s / 2),
-    y: Math.round(cy - s / 2),
-    width: s,
-    height: s,
-  }, false);
+  const pos = softClamp(
+    { x: Math.round(cx - s / 2), y: Math.round(cy - s / 2) },
+    { w: s, h: s }
+  );
+  win.setBounds({ x: pos.x, y: pos.y, width: s, height: s }, false);
 }
 
 export function movePlayer(x: number, y: number) {
   if (!win) return;
-  win.setPosition(x, y, false);
+  const b = win.getBounds();
+  const pos = softClamp({ x, y }, { w: b.width, h: b.height });
+  win.setPosition(pos.x, pos.y, false);
+}
+
+/** 把当前窗口的实际位置和大小写回 config —— 拖完/缩完之后调用 */
+export function getCurrentBounds(): { x: number; y: number; w: number; h: number } | null {
+  if (!win) return null;
+  const b = win.getBounds();
+  return { x: b.x, y: b.y, w: b.width, h: b.height };
 }
 
 export function setMuted(muted: boolean) {

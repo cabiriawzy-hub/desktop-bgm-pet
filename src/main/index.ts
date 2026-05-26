@@ -1,7 +1,7 @@
 // src/main/index.ts
 import { app } from 'electron';
 import { registerIpcHandlers } from './ipc';
-import { createMainWindow, setWindowMode, resizePlayer, resizePet, movePlayer, setMuted, getWin } from './window';
+import { createMainWindow, setWindowMode, resizePlayer, resizePet, movePlayer, setMuted, getWin, getCurrentBounds } from './window';
 import { getConfig } from './store';
 
 app.whenReady().then(() => {
@@ -17,6 +17,7 @@ app.whenReady().then(() => {
       if (pos) movePlayer(pos.x, pos.y);
     },
     onSetMuted: (muted) => setMuted(muted),
+    getBounds: () => getCurrentBounds(),
   });
 });
 
