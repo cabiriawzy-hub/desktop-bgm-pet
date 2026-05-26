@@ -88,6 +88,7 @@ export function FoldedPet() {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: petSize * 0.72, cursor: 'grab', userSelect: 'none',
           position: 'relative',
+          zIndex: 10,  // 抬到持久 webview 容器（zIndex:0）之上，wheel 才能稳定收到
           animation: 'bob 4s ease-in-out infinite',
         }}
       >
