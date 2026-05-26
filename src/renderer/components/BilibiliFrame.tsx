@@ -98,8 +98,16 @@ const HIDE_CHROME_JS = `(() => {
   // 这样 querySelectorAll('*') 也安全,400ms 跑一次完全 OK,
   // renderer 锁死的真正元凶是 attributes:true observer,不是全 DOM 遍历本身。
   const matchAndHide = (el) => {
-    if (!el || el.dataset?.broadcastHidden) return;
-    if (el.tagName === 'BODY' || el.tagName === 'HTML') return;
+    if (!el || el.tagName === 'BODY' || el.tagName === 'HTML') return;
+
+    // 已经命中过的:确认 hide 还生效(B 站会偷偷把 display 改回 block,我们要兜回去)
+    if (el.dataset?.broadcastHidden === '1') {
+      if (getComputedStyle(el).display !== 'none') {
+        el.style.setProperty('display', 'none', 'important');
+      }
+      return;
+    }
+
     if (el.children && el.children.length > 3) return;
     const text = (el.textContent || '').trim();
     if (text && text.length <= 60 && HIDE_TEXTS.some(t => text.includes(t))) {
@@ -138,13 +146,18 @@ const HIDE_CHROME_JS = `(() => {
   // resize 单独监听:B 站 player JS 在 window resize 后会重新决定要不要露"进入哔哩哔哩"CTA。
   // 它有可能是 toggle 现有元素的 visibility/class(不触发 childList → MutationObserver 抓不到),
   // 也可能是把空文本 element 填上字。两种都靠这里的 resize→rescan 兜住。
-  // debounce 300ms,避免拖拽 resize 期间狂跑;比 attributes:true 安全得多——
-  // 真正的死锁元凶是 attributes observer + 我们自己 setProperty 制造的反馈环。
+  // 立即扫一次消除闪烁;再加一个 300ms debounce 的 fallback,拖拽停下后再扫一次兜底。
   let resizeTimer = null;
   window.addEventListener('resize', () => {
+    scanCTAs();
     if (resizeTimer) clearTimeout(resizeTimer);
     resizeTimer = setTimeout(scanCTAs, 300);
   });
+
+  // 500ms 兜底:防止 B 站走了某条 MutationObserver/resize 都抓不到的路径(比如
+  // attribute 切换 display:block)。这是纯轮询,没 attributes observer 反馈环
+  // 风险,renderer 不会锁死。scanCTAs 自身 bounded,2 Hz 全 DOM 遍历的开销可忽略。
+  setInterval(scanCTAs, 500);
 
   return 'injected';
 })()`;
