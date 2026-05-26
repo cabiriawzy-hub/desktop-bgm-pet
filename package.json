@@ -2,6 +2,14 @@
   "name": "broadcast",
   "version": "0.1.0",
   "description": "Desktop BGM pet that plays Bilibili 合集 videos",
+  "license": "MIT",
+  "author": "cabiriawzy-hub",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cabiriawzy-hub/desktop-bgm-pet.git"
+  },
+  "homepage": "https://github.com/cabiriawzy-hub/desktop-bgm-pet",
+  "bugs": "https://github.com/cabiriawzy-hub/desktop-bgm-pet/issues",
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
