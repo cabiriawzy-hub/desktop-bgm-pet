@@ -46,6 +46,20 @@ const HIDE_CHROME_JS = `(() => {
   \`;
   // 按文字命中后藏掉的关键短语
   const HIDE_TEXTS = ['进入哔哩哔哩', '观看更高清', '看完整版', '打开 App', '下载客户端', '登录后免费'];
+  // 按 href 子串命中后藏掉的链接 —— "进入哔哩哔哩" CTA 是个 <a> 指回主站
+  const HIDE_HREFS = ['bilibili.com/video', 'b23.tv', 'bilibili.com/bangumi', '//www.bilibili.com'];
+
+  const hideAncestorChain = (el) => {
+    let target = el;
+    while (target.parentElement &&
+           target.parentElement.children.length === 1 &&
+           target.parentElement.tagName !== 'BODY' &&
+           target.parentElement.tagName !== 'HTML') {
+      target = target.parentElement;
+    }
+    target.style.setProperty('display', 'none', 'important');
+    if (target.dataset) target.dataset.broadcastHidden = '1';
+  };
 
   const inject = () => {
     // 1) CSS 一次注入即可
@@ -56,27 +70,24 @@ const HIDE_CHROME_JS = `(() => {
       (document.head || document.documentElement).appendChild(s);
     }
     // 2) 按文字内容找元素藏起来。覆盖动态加载的 i18n CTA。
-    const allEls = document.querySelectorAll('a, button, div, span');
-    for (const el of allEls) {
-      if (el.dataset && el.dataset.broadcastHidden) continue;
+    document.querySelectorAll('a, button, div, span, i, p, label, h1, h2, h3, h4').forEach(el => {
+      if (el.dataset && el.dataset.broadcastHidden) return;
       const text = (el.textContent || '').trim();
-      if (!text || text.length > 50) continue;
-      const hit = HIDE_TEXTS.some(t => text.includes(t));
-      if (!hit) continue;
-      // 向上找：如果父节点只有这一个子节点，整个父节点也藏（避免留下空容器）
-      let target = el;
-      while (target.parentElement &&
-             target.parentElement.children.length === 1 &&
-             target.parentElement.tagName !== 'BODY' &&
-             target.parentElement.tagName !== 'HTML') {
-        target = target.parentElement;
-      }
-      target.style.setProperty('display', 'none', 'important');
-      target.dataset.broadcastHidden = '1';
-    }
+      if (!text || text.length > 100) return;
+      if (HIDE_TEXTS.some(t => text.includes(t))) hideAncestorChain(el);
+    });
+    // 3) 按 href 灭掉指回 B 站主站的链接 —— "进入哔哩哔哩观看更高清"就是这种
+    document.querySelectorAll('a[href]').forEach(el => {
+      if (el.dataset && el.dataset.broadcastHidden) return;
+      const href = el.getAttribute('href') || '';
+      if (HIDE_HREFS.some(p => href.includes(p))) hideAncestorChain(el);
+    });
   };
   inject();
   new MutationObserver(inject).observe(document.documentElement, { childList: true, subtree: true });
+  // 兜底：MutationObserver 偶尔抓不到 B 站延迟挂的 chrome（resize 后才插入的那种），
+  // 500ms 再扫一遍保险
+  setInterval(inject, 500);
   'injected';
 })()`;
 
