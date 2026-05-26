@@ -34,6 +34,10 @@ npm run package   # 打包成 .app
    - 合集：`https://space.bilibili.com/{mid}/lists/{seasonId}?type=season`
    - 视频列表：`https://space.bilibili.com/{mid}/lists/{seriesId}?type=series`
    - 不支持个人收藏夹（type=collect）
+
+   想直接试一下，可以粘这两个：
+   - 纯音乐合集（251 首）：`https://space.bilibili.com/3690985372519123/lists/6971509?type=season`
+   - 白噪音视频列表（30 首）：`https://space.bilibili.com/95262312/lists/1577680?type=series`
 4. hover 播放器 → 显示控件（⏮ ⏭ 🔀 🔇 📂）
 5. 右键 🪩 或播放器边缘 → 弹出菜单（切合集、播放模式、视频透明度、下一首、退出）
 6. 点「−」收起回 🪩
