@@ -48,6 +48,12 @@
         { "target": "zip", "arch": ["arm64", "x64"] }
       ]
     },
+    "dmg": {
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    },
+    "zip": {
+      "artifactName": "${productName}-${version}-${arch}-mac.${ext}"
+    },
     "files": [
       "out/**/*",
       "resources/**/*"
