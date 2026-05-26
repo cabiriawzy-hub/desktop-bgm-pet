@@ -65,30 +65,39 @@ export function FoldedPet() {
     setMenu({ x: e.clientX, y: e.clientY });
   };
 
-  // 滚轮调大小：向上 = 变大，向下 = 变小
-  const onWheel = (e: React.WheelEvent) => {
-    const cfg = useStore.getState().config;
-    const cur = cfg.windowState.petSize;
-    const delta = e.deltaY < 0 ? PET_STEP : -PET_STEP;
-    const next = Math.max(PET_MIN, Math.min(PET_MAX, cur + delta));
-    if (next === cur) return;
-    // 乐观更新：先改 store 让 emoji 立刻按比例变大，再发 IPC 让窗口跟上
-    setConfig({ ...cfg, windowState: { ...cfg.windowState, petSize: next } });
-    api.updateWindowGeometry({ petSize: next });
-  };
+  // 滚轮调大小：向上 = 变大，向下 = 变小。
+  // 用 document 级 listener 兜底：macOS 透明 panel 在 emoji 之外的透明像素
+  // 上不响应元素事件，全局监听更稳。
+  useEffect(() => {
+    const onGlobalWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const cfg = useStore.getState().config;
+      const cur = cfg.windowState.petSize;
+      const delta = e.deltaY < 0 ? PET_STEP : -PET_STEP;
+      const next = Math.max(PET_MIN, Math.min(PET_MAX, cur + delta));
+      if (next === cur) return;
+      setConfig({ ...cfg, windowState: { ...cfg.windowState, petSize: next } });
+      api.updateWindowGeometry({ petSize: next });
+    };
+    window.addEventListener('wheel', onGlobalWheel, { passive: false });
+    return () => window.removeEventListener('wheel', onGlobalWheel);
+  }, [setConfig]);
 
   return (
     <>
       <div
         onMouseDown={onMouseDown}
         onContextMenu={onContextMenu}
-        onWheel={onWheel}
         style={{
           width: '100%', height: '100%',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: petSize * 0.72, cursor: 'grab', userSelect: 'none',
           position: 'relative',
-          zIndex: 10,  // 抬到持久 webview 容器（zIndex:0）之上，wheel 才能稳定收到
+          zIndex: 10,
+          // 关键：alpha=0.001 让整个 80×80 在合成器层面"算不透明"，
+          // mousedown / contextmenu 才能在 emoji 周围的"空白"区域响应。
+          // 视觉上 0.001 alpha 在 8-bit 显示器上四舍五入为 0，看不出来。
+          background: 'rgba(0,0,0,0.001)',
           animation: 'bob 4s ease-in-out infinite',
         }}
       >

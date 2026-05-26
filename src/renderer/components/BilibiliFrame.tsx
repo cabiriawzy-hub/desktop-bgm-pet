@@ -50,7 +50,17 @@ const HIDE_CHROME_JS = `(() => {
   const HIDE_HREFS = ['bilibili.com/video', 'b23.tv', 'bilibili.com/bangumi', '//www.bilibili.com'];
 
   const hideAncestorChain = (el) => {
-    let target = el;
+    // 先找最近的可点击祖先（a / button / role=button），那个通常就是 CTA 容器
+    let clickable = el;
+    while (clickable && clickable.tagName !== 'BODY' && clickable.tagName !== 'HTML') {
+      if (clickable.tagName === 'A' || clickable.tagName === 'BUTTON' ||
+          clickable.getAttribute && clickable.getAttribute('role') === 'button') {
+        break;
+      }
+      clickable = clickable.parentElement;
+    }
+    let target = (clickable && clickable.tagName !== 'BODY' && clickable.tagName !== 'HTML') ? clickable : el;
+    // 再向上 walk：只要父级只包它一个（视觉上是这个元素独占的容器），整个父级一起藏
     while (target.parentElement &&
            target.parentElement.children.length === 1 &&
            target.parentElement.tagName !== 'BODY' &&
