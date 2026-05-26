@@ -93,6 +93,8 @@ export function createMainWindow(state: WindowState): BrowserWindow {
     // type: 'panel' 让 macOS 把窗口当 NSPanel 而非 NSWindow，
     // 对 transparent 的处理路径不一样——Sequoia 已知更稳
     type: 'panel',
+    // 没获得焦点时也接收鼠标事件，wheel 才能稳
+    acceptFirstMouse: true,
     vibrancy: undefined,
     visualEffectState: 'inactive',
     titleBarStyle: 'default',
