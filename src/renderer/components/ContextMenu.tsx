@@ -1,5 +1,5 @@
 // src/renderer/components/ContextMenu.tsx
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useStore } from '../state';
 import { api } from '../api';
 import { pickNext } from '../playback';
@@ -18,6 +18,7 @@ export function ContextMenu({ x, y, onClose }: Props) {
   const config = useStore(s => s.config);
   const setConfig = useStore(s => s.setConfig);
   const triggerPlay = useStore(s => s.triggerPlay);
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
@@ -26,6 +27,21 @@ export function ContextMenu({ x, y, onClose }: Props) {
     document.addEventListener('mousedown', onDoc);
     return () => document.removeEventListener('mousedown', onDoc);
   }, [onClose]);
+
+  // 挂载后立刻量自己的尺寸，超出窗口边界就回拉
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const pad = 8;
+    let nx = x;
+    let ny = y;
+    if (x + rect.width > w - pad) nx = Math.max(pad, w - rect.width - pad);
+    if (y + rect.height > h - pad) ny = Math.max(pad, h - rect.height - pad);
+    setPos({ x: nx, y: ny });
+  }, [x, y]);
 
   const pickSource = async (id: string) => {
     const src = config.sources.find(s => s.id === id);
@@ -68,13 +84,20 @@ export function ContextMenu({ x, y, onClose }: Props) {
       ref={ref}
       style={{
         position: 'fixed',
-        left: x, top: y,
+        left: pos ? pos.x : x,
+        top: pos ? pos.y : y,
+        // 第一次渲染时还没量过尺寸，先隐藏避免抖一下
+        visibility: pos ? 'visible' : 'hidden',
         background: 'rgba(28,28,38,0.96)',
         backdropFilter: 'blur(20px)',
         borderRadius: 10, padding: 6, minWidth: 200,
         boxShadow: '0 12px 32px rgba(0,0,0,0.6)',
         border: '1px solid rgba(255,255,255,0.08)',
         zIndex: 1000,
+        // 太长就给滚动，应付窗口很小的情况
+        maxHeight: 'calc(100vh - 16px)',
+        overflowY: 'auto',
+        overscrollBehavior: 'contain',
       }}
     >
       {config.sources.length > 0 && (
