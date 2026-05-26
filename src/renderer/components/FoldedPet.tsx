@@ -4,7 +4,8 @@ import { useStore } from '../state';
 import { api } from '../api';
 import { ContextMenu } from './ContextMenu';
 
-const PET_MIN = 48;
+// macOS 对很小的透明窗会强制加默认白底，最小 80 避开那个 bug
+const PET_MIN = 80;
 const PET_MAX = 200;
 const PET_STEP = 8;
 

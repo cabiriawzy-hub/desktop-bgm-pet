@@ -89,7 +89,6 @@ export function createMainWindow(state: WindowState): BrowserWindow {
     hasShadow: false,
     alwaysOnTop: true,
     skipTaskbar: false,
-    roundedCorners: false,
     // 没获得焦点时也接收鼠标事件，wheel 才能稳
     acceptFirstMouse: true,
     vibrancy: undefined,

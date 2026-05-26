@@ -2,10 +2,15 @@
 import { app } from 'electron';
 import { registerIpcHandlers } from './ipc';
 import { createMainWindow, setWindowMode, resizePlayer, resizePet, movePlayer, setMuted, getWin, getCurrentBounds } from './window';
-import { getConfig } from './store';
+import { getConfig, setConfig } from './store';
 
 app.whenReady().then(() => {
-  const cfg = getConfig();
+  let cfg = getConfig();
+  // 老 config 里 petSize 可能 <80（之前的最小值是 48），现在拉到 80 避开 macOS
+  // 小窗口默认白底 bug
+  if (cfg.windowState.petSize < 80) {
+    cfg = setConfig(c => ({ ...c, windowState: { ...c.windowState, petSize: 80 } }));
+  }
   createMainWindow(cfg.windowState);
 
   registerIpcHandlers({
