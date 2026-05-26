@@ -1,0 +1,49 @@
+# 推 v* tag 时自动构建 macOS .app 并附到对应 Release 上。
+#
+# 用法:
+#   git tag v0.2.0 && git push origin v0.2.0
+#
+# 流程:
+#   1. 在 macos-14 (arm64) runner 上 npm ci + npm test
+#   2. npm run package 会按 package.json 里的 mac.target 配置同时产出
+#      arm64 和 x64 的 .dmg / .zip(electron-builder 自动下载两个 arch 的 electron)
+#   3. softprops/action-gh-release 把 dist/*.dmg 和 dist/*.zip 上传到 tag 对应的 Release
+#      (Release 不存在就自动创建)
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write  # 需要写权限来创建/更新 Release
+
+jobs:
+  build-mac:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install
+        run: npm ci
+
+      - name: Test
+        run: npm test
+
+      - name: Package (arm64 + x64)
+        run: npm run package
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.dmg
+            dist/*.zip
+          fail_on_unmatched_files: true
