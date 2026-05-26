@@ -69,13 +69,6 @@ export function FoldedPet() {
   // 用 document 级 listener 兜底：macOS 透明 panel 在 emoji 之外的透明像素
   // 上不响应元素事件，全局监听更稳。
   useEffect(() => {
-    // 给 html/body 也加最低限度的"假"透明色，让整个窗口面积都参与命中测试。
-    // macOS 透明 panel 对 alpha<1/255 直接当 0 看，0.001 不够，得到 ~0.01。
-    const prevHtmlBg = document.documentElement.style.background;
-    const prevBodyBg = document.body.style.background;
-    document.documentElement.style.background = 'rgba(0,0,0,0.01)';
-    document.body.style.background = 'rgba(0,0,0,0.01)';
-
     const onGlobalWheel = (e: WheelEvent) => {
       console.log('[wheel] fired, deltaY=', e.deltaY);
       e.preventDefault();
@@ -88,11 +81,7 @@ export function FoldedPet() {
       api.updateWindowGeometry({ petSize: next });
     };
     window.addEventListener('wheel', onGlobalWheel, { passive: false });
-    return () => {
-      window.removeEventListener('wheel', onGlobalWheel);
-      document.documentElement.style.background = prevHtmlBg;
-      document.body.style.background = prevBodyBg;
-    };
+    return () => window.removeEventListener('wheel', onGlobalWheel);
   }, [setConfig]);
 
   return (
@@ -106,10 +95,7 @@ export function FoldedPet() {
           fontSize: petSize * 0.72, cursor: 'grab', userSelect: 'none',
           position: 'relative',
           zIndex: 10,
-          // alpha=0.01 (2.5/255) 让整个 80×80 在合成器层面"算不透明"，
-          // mousedown / contextmenu / wheel 才能在 emoji 周围的"空白"区域响应。
-          // 视觉上 ~1% 黑色在桌面上几乎看不出，但 macOS 不会再把它当全透明跳过。
-          background: 'rgba(0,0,0,0.01)',
+          // 完全透明——alpha=0.01 在某些桌面上能看出方形蒙层，去掉
           animation: 'bob 4s ease-in-out infinite',
         }}
       >
