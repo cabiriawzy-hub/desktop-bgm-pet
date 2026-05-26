@@ -5,6 +5,7 @@ import { IPC } from '../shared/ipc-channels';
 import type {
   AddSourcePayload, RemoveSourcePayload, RefreshSourcePayload,
   SetCurrentPayload, SetPlayModePayload, SetMutedPayload, SetEmojiPayload,
+  SetPlayerOpacityPayload,
   SetWindowModePayload, UpdateWindowGeometryPayload,
 } from '../shared/ipc-channels';
 import { getConfig, setConfig } from './store';
@@ -77,6 +78,11 @@ export function registerIpcHandlers(opts: {
 
   ipcMain.handle(IPC.SetEmoji, (_e, { emoji }: SetEmojiPayload) => {
     return setConfig(cfg => ({ ...cfg, petEmoji: emoji }));
+  });
+
+  ipcMain.handle(IPC.SetPlayerOpacity, (_e, { opacity }: SetPlayerOpacityPayload) => {
+    const clamped = Math.max(0.1, Math.min(1, opacity));
+    return setConfig(cfg => ({ ...cfg, playerOpacity: clamped }));
   });
 
   ipcMain.handle(IPC.SetWindowMode, (_e, { mode }: SetWindowModePayload) => {

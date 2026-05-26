@@ -138,6 +138,39 @@ export function ContextMenu({ x, y, onClose }: Props) {
         </div>
       </div>
       <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '4px 0' }}>
+        <div style={labelStyle}>
+          视频透明度 <span style={{ color: 'rgba(255,255,255,0.55)', fontWeight: 400 }}>
+            ({Math.round(config.playerOpacity * 100)}%)
+          </span>
+        </div>
+        <div style={{ padding: '4px 10px 6px' }}>
+          <input
+            type="range"
+            min={10}
+            max={100}
+            step={5}
+            value={Math.round(config.playerOpacity * 100)}
+            onChange={async (e) => {
+              const next = Number(e.target.value) / 100;
+              const cfg = await api.setPlayerOpacity({ opacity: next });
+              setConfig(cfg);
+            }}
+            style={{
+              width: '100%',
+              accentColor: '#5cb6ff',
+              cursor: 'pointer',
+            }}
+          />
+          <div style={{
+            display: 'flex', justifyContent: 'space-between',
+            fontSize: 9, color: 'rgba(255,255,255,0.3)', marginTop: 2,
+          }}>
+            <span>10%（几乎透明）</span>
+            <span>100%（不透明）</span>
+          </div>
+        </div>
+      </div>
+      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '4px 0' }}>
         <div style={labelStyle}>播放模式</div>
         {(['sequential', 'shuffle', 'loop'] as PlayMode[]).map(m => (
           <div

@@ -37,6 +37,8 @@ export type Config = {
   playMode: PlayMode;
   muted: boolean;
   petEmoji: string;
+  /** 视频画面透明度 0..1，0.2 = 几乎全透明，1 = 完全不透明 */
+  playerOpacity: number;
   windowState: WindowState;
 };
 
@@ -47,6 +49,7 @@ export const DEFAULT_CONFIG: Config = {
   playMode: 'sequential',
   muted: false,
   petEmoji: '🪩',
+  playerOpacity: 0.5,
   windowState: {
     mode: 'folded',
     petPos: { x: -1, y: -1 },    // -1 表示"未设置"，启动时归位到屏幕中心

@@ -2,6 +2,7 @@
 import { useEffect, useRef } from 'react';
 import type { WebviewTag } from 'electron';
 import { playerRef } from '../playerRef';
+import { useStore } from '../state';
 
 type Props = { bvid: string; epoch: number };
 
@@ -103,6 +104,7 @@ const HIDE_CHROME_JS = `(() => {
 
 export function BilibiliFrame({ bvid, epoch }: Props) {
   const ref = useRef<WebviewTag>(null);
+  const opacity = useStore(s => s.config.playerOpacity);
   const src = `https://player.bilibili.com/player.html?bvid=${bvid}&autoplay=1&danmaku=0&hideCoverInfo=1`;
 
   useEffect(() => {
@@ -139,8 +141,8 @@ export function BilibiliFrame({ bvid, epoch }: Props) {
         height: '100%',
         border: 'none',
         display: 'flex',
-        // 半透明视频：让桌面壁纸/App 背景从画面里透出来
-        opacity: 0.5,
+        // 半透明视频，让桌面壁纸/App 背景从画面里透出来——用户可调
+        opacity,
       }}
     />
   );

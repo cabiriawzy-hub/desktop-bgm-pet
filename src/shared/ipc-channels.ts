@@ -8,6 +8,7 @@ export const IPC = {
   SetPlayMode: 'playback:set-mode',
   SetMuted: 'playback:set-muted',
   SetEmoji: 'pet:set-emoji',
+  SetPlayerOpacity: 'player:set-opacity',
   SetWindowMode: 'window:set-mode',
   UpdateWindowGeometry: 'window:update-geometry',
   Quit: 'app:quit',
@@ -20,6 +21,7 @@ export type SetCurrentPayload = { sourceId: string; bvid: string };
 export type SetPlayModePayload = { mode: 'sequential' | 'shuffle' | 'loop' };
 export type SetMutedPayload = { muted: boolean };
 export type SetEmojiPayload = { emoji: string };
+export type SetPlayerOpacityPayload = { opacity: number };
 export type SetWindowModePayload = { mode: 'folded' | 'expanded' };
 export type UpdateWindowGeometryPayload = {
   petPos?: { x: number; y: number };
