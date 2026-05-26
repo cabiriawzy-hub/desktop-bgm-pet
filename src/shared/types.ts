@@ -11,9 +11,13 @@ export type Video = {
 
 export type Source = {
   id: string;           // uuid
-  name: string;         // 合集名（从 B 站 API meta.name）
+  name: string;         // 列表名（从 B 站 API meta.name）
   mid: string;          // UP 主 uid（用 string，B 站新号 mid 超过 JS 安全整数）
+  // 列表 ID。listType='season' 时是 season_id，listType='series' 时是 series_id。
+  // 字段名沿用历史，没改成 listId 是为了不破坏老 config。
   seasonId: string;
+  // 老 config 没这个字段，按 'season' 处理
+  listType?: 'season' | 'series';
   videos: Video[];
   lastFetched: number;  // unix ms
 };

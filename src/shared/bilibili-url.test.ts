@@ -1,37 +1,37 @@
 import { describe, it, expect } from 'vitest';
-import { parseSeasonURL } from './bilibili-url';
+import { parseListURL } from './bilibili-url';
 
-describe('parseSeasonURL', () => {
-  it('parses a standard season URL', () => {
+describe('parseListURL', () => {
+  it('parses a season URL', () => {
     const url = 'https://space.bilibili.com/55491826/lists/3300721?type=season';
-    expect(parseSeasonURL(url)).toEqual({ mid: '55491826', seasonId: '3300721' });
+    expect(parseListURL(url)).toEqual({ mid: '55491826', listId: '3300721', listType: 'season' });
+  });
+
+  it('parses a series URL', () => {
+    const url = 'https://space.bilibili.com/95262312/lists/1577680?type=series';
+    expect(parseListURL(url)).toEqual({ mid: '95262312', listId: '1577680', listType: 'series' });
   });
 
   it('handles a 16-digit mid (new account)', () => {
     const url = 'https://space.bilibili.com/3690985372519123/lists/6971509?type=season';
-    expect(parseSeasonURL(url)).toEqual({ mid: '3690985372519123', seasonId: '6971509' });
+    expect(parseListURL(url)).toEqual({ mid: '3690985372519123', listId: '6971509', listType: 'season' });
   });
 
-  it('rejects URLs without type=season', () => {
+  it('rejects URLs without type', () => {
     const url = 'https://space.bilibili.com/55491826/lists/3300721';
-    expect(() => parseSeasonURL(url)).toThrow(/type=season/);
+    expect(() => parseListURL(url)).toThrow(/type=season 或 type=series/);
   });
 
   it('rejects type=collect (个人收藏夹)', () => {
     const url = 'https://space.bilibili.com/55491826/lists/3300721?type=collect';
-    expect(() => parseSeasonURL(url)).toThrow(/只支持.*合集/);
-  });
-
-  it('rejects type=series (UP 视频列表)', () => {
-    const url = 'https://space.bilibili.com/55491826/lists/3300721?type=series';
-    expect(() => parseSeasonURL(url)).toThrow(/只支持.*合集/);
+    expect(() => parseListURL(url)).toThrow(/不支持.*收藏夹/);
   });
 
   it('rejects non-bilibili URLs', () => {
-    expect(() => parseSeasonURL('https://example.com/foo')).toThrow(/B 站合集 URL/);
+    expect(() => parseListURL('https://example.com/foo')).toThrow(/B 站列表 URL/);
   });
 
   it('rejects garbage input', () => {
-    expect(() => parseSeasonURL('not a url')).toThrow(/B 站合集 URL/);
+    expect(() => parseListURL('not a url')).toThrow(/B 站列表 URL/);
   });
 });

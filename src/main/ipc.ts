@@ -8,8 +8,8 @@ import type {
   SetWindowModePayload, UpdateWindowGeometryPayload,
 } from '../shared/ipc-channels';
 import { getConfig, setConfig } from './store';
-import { parseSeasonURL } from '../shared/bilibili-url';
-import { fetchSeasonArchives } from './bilibili-api';
+import { parseListURL } from '../shared/bilibili-url';
+import { fetchListArchives } from './bilibili-api';
 
 export function registerIpcHandlers(opts: {
   onSetWindowMode: (mode: 'folded' | 'expanded') => void;
@@ -19,14 +19,15 @@ export function registerIpcHandlers(opts: {
   ipcMain.handle(IPC.GetConfig, () => getConfig());
 
   ipcMain.handle(IPC.AddSource, async (_e, { url }: AddSourcePayload) => {
-    const { mid, seasonId } = parseSeasonURL(url);
-    const data = await fetchSeasonArchives(mid, seasonId, fetch);
+    const { mid, listId, listType } = parseListURL(url);
+    const data = await fetchListArchives(mid, listId, listType, fetch);
     return setConfig(cfg => {
       const newSource = {
         id: randomUUID(),
         name: data.name,
         mid,
-        seasonId,
+        seasonId: listId,  // 字段名沿用历史，对 series 来说装的是 series_id
+        listType,
         videos: data.videos,
         lastFetched: Date.now(),
       };
@@ -51,7 +52,7 @@ export function registerIpcHandlers(opts: {
     const cfg = getConfig();
     const src = cfg.sources.find(s => s.id === id);
     if (!src) throw new Error('source not found');
-    const data = await fetchSeasonArchives(src.mid, src.seasonId, fetch);
+    const data = await fetchListArchives(src.mid, src.seasonId, src.listType ?? 'season', fetch);
     return setConfig(cfg => ({
       ...cfg,
       sources: cfg.sources.map(s =>
