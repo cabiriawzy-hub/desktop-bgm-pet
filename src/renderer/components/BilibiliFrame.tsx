@@ -37,6 +37,8 @@ const HIDE_CHROME_JS = `(() => {
     .bpx-player-state-wrap,
     .bpx-player-mask-wrap,
     .bpx-player-loading-wrap,
+    .bpx-player-loading-panel,
+    [class*="bpx-player-loading"],
     .bpx-player-progress-wrap,
     .bpx-player-ending-related,
     .bpx-player-ending-wrap,
@@ -49,6 +51,8 @@ const HIDE_CHROME_JS = `(() => {
     .bpx-player-state-init-mask,
     .bpx-player-state-mask,
     .bpx-player-state-btn,
+    .bpx-player-play-pause-button,
+    [class*="play-pause-button"],
     .bili-mini-mask,
     .bili-logo,
     .bilibili-player-link,
@@ -132,14 +136,13 @@ const HIDE_CHROME_JS = `(() => {
 
   // 关键安全约束:
   //   - 只观察 childList,不观察 attributes(死锁根因)
-  //   - debounce 400ms,B 站一次插一堆节点合并成一次扫描
+  //   - MutationObserver callback 是微任务,在 DOM 变更后、浏览器下次 paint 前
+  //     触发。同步调 scanCTAs 能在 paint 前灭掉 CTA,用户根本看不到闪烁。
   //   - 不监听 shadow root(我们的目标 CTA 都在 light DOM)
-  let scheduled = false;
-  new MutationObserver(() => {
-    if (scheduled) return;
-    scheduled = true;
-    setTimeout(() => { scheduled = false; scanCTAs(); }, 400);
-  }).observe(document.body || document.documentElement, {
+  //   - 我们自己 setProperty('display','none') 是 attribute 变更,不会触发
+  //     childList observer,无反馈环风险。MO 还会把同一 tick 内的多次 mutation
+  //     batch 成一次 callback,所以同步处理也不会爆 CPU。
+  new MutationObserver(scanCTAs).observe(document.body || document.documentElement, {
     childList: true, subtree: true,
   });
 
