@@ -174,6 +174,82 @@ export async function fetchVideoParts(bvid: string, fetcher: Fetcher): Promise<L
   return { name: json.data.title, videos };
 }
 
+/**
+ * 把 B 站投稿列表里的时长字符串("mm:ss" 或 "h:mm:ss")解析成秒。
+ * 容错:格式不对就返回 0,不抛错。
+ */
+export function parseMmSs(s: string): number {
+  if (!s) return 0;
+  const parts = s.split(':');
+  if (parts.length === 2) {
+    const [m, ss] = parts.map(p => parseInt(p, 10));
+    if (isFinite(m) && isFinite(ss)) return m * 60 + ss;
+    return 0;
+  }
+  if (parts.length === 3) {
+    const [h, m, ss] = parts.map(p => parseInt(p, 10));
+    if (isFinite(h) && isFinite(m) && isFinite(ss)) return h * 3600 + m * 60 + ss;
+    return 0;
+  }
+  return 0;
+}
+
+type SpaceArcSearchResponse = {
+  code: number;
+  message?: string;
+  data?: {
+    list: {
+      vlist: Array<{ bvid: string; title: string; length: string; pic: string }>;
+    };
+    page: { pn: number; ps: number; count: number };
+  };
+};
+
+/**
+ * 拉取 UP 主全部投稿。先用未签名版 x/space/arc/search,
+ * 如果被风控(-799 或类似)需要回到 spec 补 wbi 签名,本期不实现。
+ */
+export async function fetchUserUploads(mid: string, fetcher: Fetcher): Promise<ListData> {
+  const headers = {
+    'User-Agent': UA,
+    'Referer': `https://space.bilibili.com/${mid}`,
+    'Origin': 'https://space.bilibili.com',
+  };
+
+  const videos: Video[] = [];
+  let page = 1;
+  let total = Infinity;
+
+  while (videos.length < total) {
+    const url = `https://api.bilibili.com/x/space/arc/search?mid=${mid}&pn=${page}&ps=${PAGE_SIZE}&order=pubdate`;
+    const res = await fetcher(url, { headers });
+    const json = (await res.json()) as SpaceArcSearchResponse;
+
+    if (json.code !== 0 || !json.data) {
+      throw new Error(`B 站投稿 API 失败 (code=${json.code}): ${json.message ?? 'unknown'}`);
+    }
+
+    if (page === 1) {
+      total = json.data.page.count;
+    }
+
+    for (const v of json.data.list.vlist) {
+      videos.push({
+        bvid: v.bvid,
+        title: v.title,
+        duration: parseMmSs(v.length),
+        cover: v.pic,
+      });
+    }
+
+    if (json.data.list.vlist.length < PAGE_SIZE) break;
+    page++;
+  }
+
+  // 不签名的端点不返 UP 主名,用 mid 兜底
+  return { name: `TA的视频 · UP-${mid}`, videos };
+}
+
 /** 多态：根据 listType 路由到对应的实现。 */
 export function fetchListArchives(
   mid: string,

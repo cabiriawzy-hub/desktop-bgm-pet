@@ -165,6 +165,85 @@ describe('fetchVideoParts', () => {
   });
 });
 
+describe('parseMmSs', () => {
+  it('parses mm:ss', async () => {
+    const { parseMmSs } = await import('./bilibili-api');
+    expect(parseMmSs('23:18')).toBe(23 * 60 + 18);
+    expect(parseMmSs('0:30')).toBe(30);
+  });
+
+  it('parses h:mm:ss', async () => {
+    const { parseMmSs } = await import('./bilibili-api');
+    expect(parseMmSs('1:02:33')).toBe(3600 + 2 * 60 + 33);
+  });
+
+  it('returns 0 for malformed input', async () => {
+    const { parseMmSs } = await import('./bilibili-api');
+    expect(parseMmSs('')).toBe(0);
+    expect(parseMmSs('abc')).toBe(0);
+  });
+});
+
+describe('fetchUserUploads', () => {
+  it('returns parsed videos on success', async () => {
+    const mockFetch = vi.fn().mockResolvedValueOnce(mockJsonResponse({
+      code: 0,
+      data: {
+        list: {
+          vlist: [
+            { bvid: 'BV1aaa', title: '永远保持积极乐观的心态', length: '00:18', pic: 'http://p1' },
+            { bvid: 'BV1bbb', title: '想要找到心爱之人', length: '00:48', pic: 'http://p2' },
+          ],
+        },
+        page: { pn: 1, ps: 30, count: 2 },
+      },
+    }));
+
+    const { fetchUserUploads } = await import('./bilibili-api');
+    const result = await fetchUserUploads('3691000482499314', mockFetch);
+
+    expect(result.videos).toEqual([
+      { bvid: 'BV1aaa', title: '永远保持积极乐观的心态', duration: 18, cover: 'http://p1' },
+      { bvid: 'BV1bbb', title: '想要找到心爱之人', duration: 48, cover: 'http://p2' },
+    ]);
+    expect(result.name).toContain('3691000482499314');
+  });
+
+  it('paginates until count is reached', async () => {
+    const page1 = {
+      list: {
+        vlist: Array.from({ length: 30 }, (_, i) => ({
+          bvid: `BV${i}`, title: `t${i}`, length: '01:00', pic: 'p',
+        })),
+      },
+      page: { pn: 1, ps: 30, count: 35 },
+    };
+    const page2 = {
+      list: {
+        vlist: Array.from({ length: 5 }, (_, i) => ({
+          bvid: `BV${30 + i}`, title: `t${30 + i}`, length: '01:00', pic: 'p',
+        })),
+      },
+      page: { pn: 2, ps: 30, count: 35 },
+    };
+    const mockFetch = vi.fn()
+      .mockResolvedValueOnce(mockJsonResponse({ code: 0, data: page1 }))
+      .mockResolvedValueOnce(mockJsonResponse({ code: 0, data: page2 }));
+
+    const { fetchUserUploads } = await import('./bilibili-api');
+    const result = await fetchUserUploads('1', mockFetch);
+
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(result.videos).toHaveLength(35);
+  });
+
+  it('throws when B 站 returns risk-control code', async () => {
+    const mockFetch = vi.fn().mockResolvedValueOnce(mockJsonResponse({ code: -799, message: 'risk control' }));
+    const { fetchUserUploads } = await import('./bilibili-api');
+    await expect(fetchUserUploads('1', mockFetch)).rejects.toThrow(/-799/);
+  });
+});
+
 describe('fetchListArchives (dispatch)', () => {
   it('routes listType=season to season endpoint', async () => {
     const mockFetch = vi.fn().mockResolvedValueOnce(mockJsonResponse({
