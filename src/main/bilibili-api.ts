@@ -238,7 +238,16 @@ export async function fetchUserUploads(mid: string, fetcher: Fetcher): Promise<L
 
   while (videos.length < total) {
     const query = signQuery(
-      { mid, pn: page, ps: PAGE_SIZE, order: 'pubdate' },
+      {
+        mid,
+        pn: page,
+        ps: PAGE_SIZE,
+        order: 'pubdate',
+        tid: 0,
+        keyword: '',
+        platform: 'web',
+        web_location: 1550101,
+      },
       mixinKey,
     );
     const url = `https://api.bilibili.com/x/space/wbi/arc/search?${query}`;
