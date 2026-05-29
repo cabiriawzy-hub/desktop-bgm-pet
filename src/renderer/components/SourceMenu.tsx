@@ -5,6 +5,25 @@ import { api } from '../api';
 type Props = { onClose: () => void };
 type View = 'tracks' | 'sources';
 
+function CategoryHeader({ emoji, label }: { emoji: string; label: string }) {
+  return (
+    <div style={{
+      padding: '8px 10px 4px',
+      fontSize: 10,
+      fontWeight: 600,
+      color: 'rgba(255,255,255,0.45)',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 6,
+    }}>
+      <span>{emoji}</span>
+      <span>{label}</span>
+    </div>
+  );
+}
+
 export function SourceMenu({ onClose }: Props) {
   const [view, setView] = useState<View>('tracks');
   const [adding, setAdding] = useState(false);
@@ -177,28 +196,40 @@ export function SourceMenu({ onClose }: Props) {
             合集是空的
           </div>
         ) : (
-          sources.map(s => (
-            <div
-              key={s.id}
-              onClick={() => switchSource(s.id)}
-              style={rowStyle(s.id === currentSourceId)}
-            >
-              <span style={{
-                width: 14, flexShrink: 0, fontSize: 11,
-                color: s.id === currentSourceId ? '#5cb6ff' : 'transparent',
-              }}>✓</span>
-              <span style={{
-                flex: 1, minWidth: 0,
-                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-              }}>
-                {s.name}
-              </span>
-              <span style={{
-                fontSize: 10, color: 'rgba(255,255,255,0.4)',
-                fontVariantNumeric: 'tabular-nums',
-              }}>{s.videos.length}</span>
-            </div>
-          ))
+          (() => {
+            const music = sources.filter(s => s.category === 'music');
+            const learning = sources.filter(s => s.category === 'learning');
+            const renderRow = (s: typeof sources[number]) => (
+              <div
+                key={s.id}
+                onClick={() => switchSource(s.id)}
+                style={rowStyle(s.id === currentSourceId)}
+              >
+                <span style={{
+                  width: 14, flexShrink: 0, fontSize: 11,
+                  color: s.id === currentSourceId ? '#5cb6ff' : 'transparent',
+                }}>✓</span>
+                <span style={{
+                  flex: 1, minWidth: 0,
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                }}>
+                  {s.name}
+                </span>
+                <span style={{
+                  fontSize: 10, color: 'rgba(255,255,255,0.4)',
+                  fontVariantNumeric: 'tabular-nums',
+                }}>{s.videos.length}</span>
+              </div>
+            );
+            return (
+              <>
+                {music.length > 0 && <CategoryHeader emoji="🎵" label="音乐" />}
+                {music.map(renderRow)}
+                {learning.length > 0 && <CategoryHeader emoji="📖" label="英文学习" />}
+                {learning.map(renderRow)}
+              </>
+            );
+          })()
         )}
       </div>
 
