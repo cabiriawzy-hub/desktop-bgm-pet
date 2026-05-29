@@ -266,4 +266,22 @@ describe('fetchListArchives (dispatch)', () => {
     expect(mockFetch.mock.calls[0][0]).toContain('series/series');
     expect(mockFetch.mock.calls[1][0]).toContain('series/archives');
   });
+
+  it('routes listType=uploads to space/arc/search', async () => {
+    const mockFetch = vi.fn().mockResolvedValueOnce(mockJsonResponse({
+      code: 0,
+      data: { list: { vlist: [] }, page: { pn: 1, ps: 30, count: 0 } },
+    }));
+    await fetchListArchives('3691000482499314', '3691000482499314', 'uploads', mockFetch);
+    expect(mockFetch.mock.calls[0][0]).toContain('space/arc/search');
+  });
+
+  it('routes listType=parts to web-interface/view', async () => {
+    const mockFetch = vi.fn().mockResolvedValueOnce(mockJsonResponse({
+      code: 0,
+      data: { bvid: 'BV', title: 't', pic: 'p', owner: { mid: 1 }, pages: [] },
+    }));
+    await fetchListArchives('', 'BV1Y7411n7iM', 'parts', mockFetch);
+    expect(mockFetch.mock.calls[0][0]).toContain('web-interface/view?bvid=BV1Y7411n7iM');
+  });
 });

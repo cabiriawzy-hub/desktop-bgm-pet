@@ -250,14 +250,18 @@ export async function fetchUserUploads(mid: string, fetcher: Fetcher): Promise<L
   return { name: `TA的视频 · UP-${mid}`, videos };
 }
 
-/** 多态：根据 listType 路由到对应的实现。 */
+/** 多态:根据 listType 路由到对应的实现。 */
 export function fetchListArchives(
   mid: string,
   listId: string,
   listType: ListType,
   fetcher: Fetcher
 ): Promise<ListData> {
-  return listType === 'series'
-    ? fetchSeriesArchives(mid, listId, fetcher)
-    : fetchSeasonArchives(mid, listId, fetcher);
+  switch (listType) {
+    case 'series':  return fetchSeriesArchives(mid, listId, fetcher);
+    case 'uploads': return fetchUserUploads(mid, fetcher);
+    case 'parts':   return fetchVideoParts(listId, fetcher);
+    case 'season':
+    default:        return fetchSeasonArchives(mid, listId, fetcher);
+  }
 }
