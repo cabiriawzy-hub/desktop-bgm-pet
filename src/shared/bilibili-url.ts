@@ -1,9 +1,10 @@
-export type ListType = 'season' | 'series';
+export type ListType = 'season' | 'series' | 'uploads';
 export type ListRef = { mid: string; listId: string; listType: ListType };
 // 老类型别名，保留兼容
 export type SeasonRef = { mid: string; seasonId: string };
 
-const PATH_RE = /^https?:\/\/space\.bilibili\.com\/(\d+)\/lists\/(\d+)\/?$/;
+const LISTS_PATH_RE = /^\/(\d+)\/lists\/(\d+)\/?$/;
+const UPLOADS_PATH_RE = /^\/(\d+)(?:\/.*)?$/;
 
 /**
  * 解析 B 站 UP 主列表 URL。
@@ -20,22 +21,28 @@ export function parseListURL(input: string): ListRef {
     throw new Error('不是合法的 B 站列表 URL');
   }
 
-  if (url.hostname !== 'space.bilibili.com') {
-    throw new Error('不是合法的 B 站列表 URL');
+  if (url.hostname === 'space.bilibili.com') {
+    // 优先匹配 /lists/{id} 形式(合集 / 视频列表)
+    const listsMatch = LISTS_PATH_RE.exec(url.pathname);
+    if (listsMatch) {
+      const [, mid, listId] = listsMatch;
+      const type = url.searchParams.get('type');
+      if (type === 'season') return { mid, listId, listType: 'season' };
+      if (type === 'series') return { mid, listId, listType: 'series' };
+      if (type === 'collect') {
+        throw new Error('不支持「个人收藏夹」(type=collect)，请用 UP 主自己的合集或视频列表');
+      }
+      throw new Error('URL 缺少 type=season 或 type=series 参数');
+    }
+    // 退化为裸 UP 主主页(可带任意子路径如 /video, /dynamic, /upload/video)
+    const uploadsMatch = UPLOADS_PATH_RE.exec(url.pathname);
+    if (uploadsMatch) {
+      const mid = uploadsMatch[1];
+      return { mid, listId: mid, listType: 'uploads' };
+    }
   }
 
-  const m = PATH_RE.exec(`${url.protocol}//${url.host}${url.pathname}`);
-  if (!m) {
-    throw new Error('不是合法的 B 站列表 URL');
-  }
-
-  const type = url.searchParams.get('type');
-  if (type === 'season') return { mid: m[1], listId: m[2], listType: 'season' };
-  if (type === 'series') return { mid: m[1], listId: m[2], listType: 'series' };
-  if (type === 'collect') {
-    throw new Error('不支持「个人收藏夹」(type=collect)，请用 UP 主自己的合集或视频列表');
-  }
-  throw new Error('URL 缺少 type=season 或 type=series 参数');
+  throw new Error('不是合法的 B 站列表 URL');
 }
 
 /** @deprecated 用 parseListURL 替代 */

@@ -34,4 +34,58 @@ describe('parseListURL', () => {
   it('rejects garbage input', () => {
     expect(() => parseListURL('not a url')).toThrow(/B 站列表 URL/);
   });
+
+  it('parses bare UP 主 homepage URL as uploads', () => {
+    const url = 'https://space.bilibili.com/3691000482499314';
+    expect(parseListURL(url)).toEqual({
+      mid: '3691000482499314',
+      listId: '3691000482499314',
+      listType: 'uploads',
+    });
+  });
+
+  it('parses UP 主 homepage URL with trailing slash', () => {
+    const url = 'https://space.bilibili.com/3691000482499314/';
+    expect(parseListURL(url)).toEqual({
+      mid: '3691000482499314',
+      listId: '3691000482499314',
+      listType: 'uploads',
+    });
+  });
+
+  it('parses UP 主 homepage URL with /video subpath', () => {
+    const url = 'https://space.bilibili.com/3691000482499314/video';
+    expect(parseListURL(url)).toEqual({
+      mid: '3691000482499314',
+      listId: '3691000482499314',
+      listType: 'uploads',
+    });
+  });
+
+  it('parses UP 主 homepage URL with /upload/video subpath', () => {
+    const url = 'https://space.bilibili.com/3691000482499314/upload/video';
+    expect(parseListURL(url)).toEqual({
+      mid: '3691000482499314',
+      listId: '3691000482499314',
+      listType: 'uploads',
+    });
+  });
+
+  it('parses UP 主 homepage URL with /dynamic subpath', () => {
+    const url = 'https://space.bilibili.com/3691000482499314/dynamic';
+    expect(parseListURL(url)).toEqual({
+      mid: '3691000482499314',
+      listId: '3691000482499314',
+      listType: 'uploads',
+    });
+  });
+
+  it('ignores spm_id_from tracking param on UP 主 URL', () => {
+    const url = 'https://space.bilibili.com/3691000482499314?spm_id_from=333.337.0.0';
+    expect(parseListURL(url)).toEqual({
+      mid: '3691000482499314',
+      listId: '3691000482499314',
+      listType: 'uploads',
+    });
+  });
 });
