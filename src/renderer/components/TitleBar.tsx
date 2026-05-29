@@ -8,10 +8,13 @@ export function TitleBar() {
   const sources = useStore(s => s.config.sources);
   const currentSourceId = useStore(s => s.config.currentSourceId);
   const currentBvid = useStore(s => s.config.currentBvid);
+  const currentPartNum = useStore(s => s.config.currentPartNum);
   const setConfig = useStore(s => s.setConfig);
 
   const currentSource = sources.find(s => s.id === currentSourceId);
-  const currentVideo = currentSource?.videos.find(v => v.bvid === currentBvid);
+  const currentVideo = currentSource?.videos.find(v =>
+    v.bvid === currentBvid && (v.partNum ?? null) === currentPartNum
+  );
   const title = currentVideo?.title ?? '—';
 
   const dragState = useRef({ down: false, startX: 0, startY: 0, startScreenX: 0, startScreenY: 0 });

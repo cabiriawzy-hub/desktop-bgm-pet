@@ -32,7 +32,9 @@ export function ControlBar() {
   const togglePaused = useStore(s => s.togglePaused);
 
   const currentSource = config.sources.find(s => s.id === config.currentSourceId);
-  const currentVideo = currentSource?.videos.find(v => v.bvid === config.currentBvid);
+  const currentVideo = currentSource?.videos.find(v =>
+    v.bvid === config.currentBvid && (v.partNum ?? null) === config.currentPartNum
+  );
   const duration = currentVideo?.duration ?? 0;
 
   const playNext = async () => {

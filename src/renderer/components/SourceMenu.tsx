@@ -33,6 +33,7 @@ export function SourceMenu({ onClose }: Props) {
   const sources = useStore(s => s.config.sources);
   const currentSourceId = useStore(s => s.config.currentSourceId);
   const currentBvid = useStore(s => s.config.currentBvid);
+  const currentPartNum = useStore(s => s.config.currentPartNum);
   const setConfig = useStore(s => s.setConfig);
   const triggerPlay = useStore(s => s.triggerPlay);
 
@@ -166,10 +167,10 @@ export function SourceMenu({ onClose }: Props) {
       }}>
         {view === 'tracks' && currentSource && currentSource.videos.length > 0 ? (
           currentSource.videos.map((v, i) => {
-            const active = v.bvid === currentBvid;
+            const active = v.bvid === currentBvid && (v.partNum ?? null) === currentPartNum;
             return (
               <div
-                key={v.bvid}
+                key={`${v.bvid}-p${v.partNum ?? 0}`}
                 onClick={() => pickTrack(v.bvid, v.partNum ?? null)}
                 title={v.title}
                 style={rowStyle(active)}
