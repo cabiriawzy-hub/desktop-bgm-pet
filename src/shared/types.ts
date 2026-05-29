@@ -75,7 +75,7 @@ export const DEFAULT_CONFIG: Config = {
   playerOpacity: 0.5,
   windowState: {
     mode: 'folded',
-    petPos: { x: -1, y: -1 },
+    petPos: { x: -1, y: -1 },    // -1 表示"未设置"，启动时归位到屏幕中心
     petSize: 80,
     playerPos: { x: -1, y: -1 },
     playerSize: { w: 360, h: 240 },
