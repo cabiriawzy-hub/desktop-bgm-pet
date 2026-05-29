@@ -3,7 +3,7 @@ import { pickNext, pickPrev } from './playback';
 import type { Source } from '../shared/types';
 
 const src: Source = {
-  id: 's1', name: 't', mid: '1', seasonId: '1', lastFetched: 0,
+  id: 's1', name: 't', mid: '1', seasonId: '1', lastFetched: 0, category: 'music',
   videos: [
     { bvid: 'a', title: 'A', cover: '', duration: 60 },
     { bvid: 'b', title: 'B', cover: '', duration: 60 },
