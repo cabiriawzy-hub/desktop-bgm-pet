@@ -49,7 +49,7 @@ export function pickPrev(
     return videos[findIndex(videos, currentBvid, currentPartNum)] ?? videos[0];
   }
   if (mode === 'shuffle') {
-    return pickNext(source, currentBvid, mode, currentPartNum);
+    return pickNext(source, currentBvid, mode, currentPartNum);  // 随机时上一首=下一个随机
   }
   const idx = findIndex(videos, currentBvid, currentPartNum);
   const prevIdx = idx <= 0 ? videos.length - 1 : idx - 1;
