@@ -82,6 +82,11 @@ const HIDE_CHROME_JS = `(() => {
     [class*="author-info"],
     [class*="follow-btn"],
     [class*="tips-card"],
+    [class*="pause-related"],
+    [class*="pause-recommend"],
+    [class*="related-card"],
+    [class*="recommend-card"],
+    [class*="cards-wrap"],
     [class*="-cta-"] { display: none !important; }
   \`;
   const HIDE_TEXTS = ['进入哔哩哔哩', '观看更高清', '看完整版', '打开 App', '下载客户端', '登录后免费'];
