@@ -5,6 +5,7 @@ function mockJsonResponse(data: any) {
   return {
     ok: true,
     status: 200,
+    text: async () => JSON.stringify(data),
     json: async () => data,
   } as unknown as Response;
 }

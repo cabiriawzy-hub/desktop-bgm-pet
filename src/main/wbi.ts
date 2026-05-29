@@ -36,9 +36,19 @@ export async function fetchWbiKeys(fetcher: Fetcher): Promise<WbiKeys> {
   const res = await fetcher('https://api.bilibili.com/x/web-interface/nav', {
     headers: {
       'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Referer': 'https://www.bilibili.com/',
+      'Origin': 'https://www.bilibili.com',
     },
   });
-  const json = (await res.json()) as NavResponse;
+  const text = await res.text();
+  let json: NavResponse;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    throw new Error(
+      `B 站 nav API 返回非 JSON (HTTP ${res.status},前 80 字符: ${text.slice(0, 80)})`
+    );
+  }
   if (!json.data?.wbi_img) {
     throw new Error(`B 站 nav API 失败 (code=${json.code})`);
   }

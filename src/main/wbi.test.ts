@@ -2,7 +2,12 @@ import { describe, it, expect, vi } from 'vitest';
 import { getMixinKey, signQuery, fetchWbiKeys } from './wbi';
 
 function mockJsonResponse(data: any) {
-  return { ok: true, status: 200, json: async () => data } as unknown as Response;
+  return {
+    ok: true,
+    status: 200,
+    text: async () => JSON.stringify(data),
+    json: async () => data,
+  } as unknown as Response;
 }
 
 describe('getMixinKey', () => {
@@ -68,5 +73,14 @@ describe('fetchWbiKeys', () => {
   it('throws on bad response', async () => {
     const mockFetch = vi.fn().mockResolvedValueOnce(mockJsonResponse({ code: -101 }));
     await expect(fetchWbiKeys(mockFetch)).rejects.toThrow(/nav API/);
+  });
+
+  it('throws a helpful error when response is HTML (not JSON)', async () => {
+    const mockFetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      text: async () => '<!DOCTYPE html><html>...',
+    } as unknown as Response);
+    await expect(fetchWbiKeys(mockFetch)).rejects.toThrow(/非 JSON/);
   });
 });
