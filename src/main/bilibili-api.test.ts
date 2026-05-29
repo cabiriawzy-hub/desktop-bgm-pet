@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fetchSeasonArchives, fetchSeriesArchives, fetchListArchives } from './bilibili-api';
 
 function mockJsonResponse(data: any) {
@@ -185,23 +185,39 @@ describe('parseMmSs', () => {
 });
 
 describe('fetchUserUploads', () => {
+  // 每个 test 开头重置 wbi 缓存,避免上一个 test 的 fetch 留下的 cache 干扰
+  beforeEach(async () => {
+    const { _resetWbiCache } = await import('./bilibili-api');
+    _resetWbiCache();
+  });
+
   it('returns parsed videos on success', async () => {
-    const mockFetch = vi.fn().mockResolvedValueOnce(mockJsonResponse({
-      code: 0,
-      data: {
-        list: {
-          vlist: [
-            { bvid: 'BV1aaa', title: '永远保持积极乐观的心态', length: '00:18', pic: 'http://p1' },
-            { bvid: 'BV1bbb', title: '想要找到心爱之人', length: '00:48', pic: 'http://p2' },
-          ],
+    const mockFetch = vi.fn()
+      // 1. nav (for wbi keys)
+      .mockResolvedValueOnce(mockJsonResponse({
+        code: 0,
+        data: { wbi_img: { img_url: 'https://x/aaa.png', sub_url: 'https://x/bbb.png' } },
+      }))
+      // 2. actual signed arc/search
+      .mockResolvedValueOnce(mockJsonResponse({
+        code: 0,
+        data: {
+          list: {
+            vlist: [
+              { bvid: 'BV1aaa', title: '永远保持积极乐观的心态', length: '00:18', pic: 'http://p1' },
+              { bvid: 'BV1bbb', title: '想要找到心爱之人', length: '00:48', pic: 'http://p2' },
+            ],
+          },
+          page: { pn: 1, ps: 30, count: 2 },
         },
-        page: { pn: 1, ps: 30, count: 2 },
-      },
-    }));
+      }));
 
     const { fetchUserUploads } = await import('./bilibili-api');
     const result = await fetchUserUploads('3691000482499314', mockFetch);
 
+    // First call is nav, second is the actual data fetch
+    expect(mockFetch.mock.calls[0][0]).toContain('/x/web-interface/nav');
+    expect(mockFetch.mock.calls[1][0]).toContain('space/wbi/arc/search');
     expect(result.videos).toEqual([
       { bvid: 'BV1aaa', title: '永远保持积极乐观的心态', duration: 18, cover: 'http://p1' },
       { bvid: 'BV1bbb', title: '想要找到心爱之人', duration: 48, cover: 'http://p2' },
@@ -227,18 +243,30 @@ describe('fetchUserUploads', () => {
       page: { pn: 2, ps: 30, count: 35 },
     };
     const mockFetch = vi.fn()
+      // nav mock
+      .mockResolvedValueOnce(mockJsonResponse({
+        code: 0,
+        data: { wbi_img: { img_url: 'https://x/aaa.png', sub_url: 'https://x/bbb.png' } },
+      }))
       .mockResolvedValueOnce(mockJsonResponse({ code: 0, data: page1 }))
       .mockResolvedValueOnce(mockJsonResponse({ code: 0, data: page2 }));
 
     const { fetchUserUploads } = await import('./bilibili-api');
     const result = await fetchUserUploads('1', mockFetch);
 
-    expect(mockFetch).toHaveBeenCalledTimes(2);
+    // nav + 2 arc/search pages = 3 calls total
+    expect(mockFetch).toHaveBeenCalledTimes(3);
     expect(result.videos).toHaveLength(35);
   });
 
   it('throws when B 站 returns risk-control code', async () => {
-    const mockFetch = vi.fn().mockResolvedValueOnce(mockJsonResponse({ code: -799, message: 'risk control' }));
+    const mockFetch = vi.fn()
+      // nav mock
+      .mockResolvedValueOnce(mockJsonResponse({
+        code: 0,
+        data: { wbi_img: { img_url: 'https://x/aaa.png', sub_url: 'https://x/bbb.png' } },
+      }))
+      .mockResolvedValueOnce(mockJsonResponse({ code: -799, message: 'risk control' }));
     const { fetchUserUploads } = await import('./bilibili-api');
     await expect(fetchUserUploads('1', mockFetch)).rejects.toThrow(/-799/);
   });
@@ -267,13 +295,20 @@ describe('fetchListArchives (dispatch)', () => {
     expect(mockFetch.mock.calls[1][0]).toContain('series/archives');
   });
 
-  it('routes listType=uploads to space/arc/search', async () => {
-    const mockFetch = vi.fn().mockResolvedValueOnce(mockJsonResponse({
-      code: 0,
-      data: { list: { vlist: [] }, page: { pn: 1, ps: 30, count: 0 } },
-    }));
+  it('routes listType=uploads to space/wbi/arc/search', async () => {
+    const mockFetch = vi.fn()
+      .mockResolvedValueOnce(mockJsonResponse({
+        code: 0,
+        data: { wbi_img: { img_url: 'https://x/a.png', sub_url: 'https://x/b.png' } },
+      }))
+      .mockResolvedValueOnce(mockJsonResponse({
+        code: 0,
+        data: { list: { vlist: [] }, page: { pn: 1, ps: 30, count: 0 } },
+      }));
+    const { _resetWbiCache } = await import('./bilibili-api');
+    _resetWbiCache();
     await fetchListArchives('3691000482499314', '3691000482499314', 'uploads', mockFetch);
-    expect(mockFetch.mock.calls[0][0]).toContain('space/arc/search');
+    expect(mockFetch.mock.calls[1][0]).toContain('space/wbi/arc/search');
   });
 
   it('routes listType=parts to web-interface/view', async () => {

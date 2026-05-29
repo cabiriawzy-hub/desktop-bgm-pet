@@ -1,8 +1,22 @@
 import type { Video } from '../shared/types';
 import type { ListType } from '../shared/bilibili-url';
+import { fetchWbiKeys, getMixinKey, signQuery } from './wbi';
 
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 const PAGE_SIZE = 30;
+
+// 进程级缓存:wbi mixin key 短期内不变,避免每次 fetchUserUploads 都打 nav 一次。
+// 测试时通过 _resetWbiCache() 重置。
+let cachedMixinKey: string | null = null;
+export function _resetWbiCache() { cachedMixinKey = null; }
+
+async function getCachedMixinKey(fetcher: Fetcher): Promise<string> {
+  if (!cachedMixinKey) {
+    const { imgKey, subKey } = await fetchWbiKeys(fetcher);
+    cachedMixinKey = getMixinKey(imgKey + subKey);
+  }
+  return cachedMixinKey;
+}
 
 export type ListData = {
   name: string;
@@ -206,10 +220,12 @@ type SpaceArcSearchResponse = {
 };
 
 /**
- * 拉取 UP 主全部投稿。先用未签名版 x/space/arc/search,
- * 如果被风控(-799 或类似)需要回到 spec 补 wbi 签名,本期不实现。
+ * 拉取 UP 主全部投稿。用 wbi 签名版 x/space/wbi/arc/search 端点。
+ * 不签名版会被 -799 风控拦。
  */
 export async function fetchUserUploads(mid: string, fetcher: Fetcher): Promise<ListData> {
+  const mixinKey = await getCachedMixinKey(fetcher);
+
   const headers = {
     'User-Agent': UA,
     'Referer': `https://space.bilibili.com/${mid}`,
@@ -221,7 +237,11 @@ export async function fetchUserUploads(mid: string, fetcher: Fetcher): Promise<L
   let total = Infinity;
 
   while (videos.length < total) {
-    const url = `https://api.bilibili.com/x/space/arc/search?mid=${mid}&pn=${page}&ps=${PAGE_SIZE}&order=pubdate`;
+    const query = signQuery(
+      { mid, pn: page, ps: PAGE_SIZE, order: 'pubdate' },
+      mixinKey,
+    );
+    const url = `https://api.bilibili.com/x/space/wbi/arc/search?${query}`;
     const res = await fetcher(url, { headers });
     const json = (await res.json()) as SpaceArcSearchResponse;
 
@@ -246,7 +266,7 @@ export async function fetchUserUploads(mid: string, fetcher: Fetcher): Promise<L
     page++;
   }
 
-  // 不签名的端点不返 UP 主名,用 mid 兜底
+  // 不签名的端点不返 UP 主名,签名版同样不返,用 mid 兜底
   return { name: `TA的视频 · UP-${mid}`, videos };
 }
 
