@@ -1,4 +1,6 @@
 // src/shared/ipc-channels.ts
+import type { Category } from './types';
+
 export const IPC = {
   GetConfig: 'config:get',
   AddSource: 'source:add',
@@ -14,10 +16,10 @@ export const IPC = {
   Quit: 'app:quit',
 } as const;
 
-export type AddSourcePayload = { url: string };
+export type AddSourcePayload = { url: string; category: Category };
 export type RemoveSourcePayload = { id: string };
 export type RefreshSourcePayload = { id: string };
-export type SetCurrentPayload = { sourceId: string; bvid: string };
+export type SetCurrentPayload = { sourceId: string; bvid: string; partNum: number | null };
 export type SetPlayModePayload = { mode: 'sequential' | 'shuffle' | 'loop' };
 export type SetMutedPayload = { muted: boolean };
 export type SetEmojiPayload = { emoji: string };

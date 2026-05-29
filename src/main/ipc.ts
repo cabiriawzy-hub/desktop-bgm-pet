@@ -20,7 +20,7 @@ export function registerIpcHandlers(opts: {
 }) {
   ipcMain.handle(IPC.GetConfig, () => getConfig());
 
-  ipcMain.handle(IPC.AddSource, async (_e, { url }: AddSourcePayload) => {
+  ipcMain.handle(IPC.AddSource, async (_e, { url, category }: AddSourcePayload) => {
     const { mid, listId, listType } = parseListURL(url);
     const data = await fetchListArchives(mid, listId, listType, fetch);
     return setConfig(cfg => {
@@ -28,25 +28,33 @@ export function registerIpcHandlers(opts: {
         id: randomUUID(),
         name: data.name,
         mid,
-        seasonId: listId,  // 字段名沿用历史，对 series 来说装的是 series_id
+        seasonId: listId,
         listType,
+        category,
         videos: data.videos,
         lastFetched: Date.now(),
       };
       const sources = [...cfg.sources, newSource];
-      // 第一次添加 → 自动选中第一首
       const currentSourceId = cfg.currentSourceId ?? newSource.id;
       const currentBvid = cfg.currentBvid ?? (newSource.videos[0]?.bvid ?? null);
-      return { ...cfg, sources, currentSourceId, currentBvid };
+      const currentPartNum = cfg.currentBvid
+        ? cfg.currentPartNum
+        : (newSource.videos[0]?.partNum ?? null);
+      return { ...cfg, sources, currentSourceId, currentBvid, currentPartNum };
     });
   });
 
   ipcMain.handle(IPC.RemoveSource, (_e, { id }: RemoveSourcePayload) => {
     return setConfig(cfg => {
       const sources = cfg.sources.filter(s => s.id !== id);
-      const currentSourceId = cfg.currentSourceId === id ? null : cfg.currentSourceId;
-      const currentBvid = cfg.currentSourceId === id ? null : cfg.currentBvid;
-      return { ...cfg, sources, currentSourceId, currentBvid };
+      const wasActive = cfg.currentSourceId === id;
+      return {
+        ...cfg,
+        sources,
+        currentSourceId: wasActive ? null : cfg.currentSourceId,
+        currentBvid: wasActive ? null : cfg.currentBvid,
+        currentPartNum: wasActive ? null : cfg.currentPartNum,
+      };
     });
   });
 
@@ -63,8 +71,8 @@ export function registerIpcHandlers(opts: {
     }));
   });
 
-  ipcMain.handle(IPC.SetCurrent, (_e, { sourceId, bvid }: SetCurrentPayload) => {
-    return setConfig(cfg => ({ ...cfg, currentSourceId: sourceId, currentBvid: bvid }));
+  ipcMain.handle(IPC.SetCurrent, (_e, { sourceId, bvid, partNum }: SetCurrentPayload) => {
+    return setConfig(cfg => ({ ...cfg, currentSourceId: sourceId, currentBvid: bvid, currentPartNum: partNum }));
   });
 
   ipcMain.handle(IPC.SetPlayMode, (_e, { mode }: SetPlayModePayload) => {
