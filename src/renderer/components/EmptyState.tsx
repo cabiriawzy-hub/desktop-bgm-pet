@@ -15,7 +15,7 @@ export function EmptyState() {
     setLoading(true);
     try {
       // AddSource IPC handler 内部已经处理「无 current 时自动选中第一首」
-      const cfg = await api.addSource({ url: url.trim() });
+      const cfg = await api.addSource({ url: url.trim(), category: 'music' });
       // 空状态进来时一定没有 current，这里加完一定会有，bump epoch 启动播放
       triggerPlay(cfg);
     } catch (e: any) {

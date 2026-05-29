@@ -37,18 +37,18 @@ export function ControlBar() {
 
   const playNext = async () => {
     if (!currentSource) return;
-    const v = pickNext(currentSource, config.currentBvid, config.playMode);
+    const v = pickNext(currentSource, config.currentBvid, config.playMode, config.currentPartNum);
     if (v) {
-      const cfg = await api.setCurrent({ sourceId: currentSource.id, bvid: v.bvid });
+      const cfg = await api.setCurrent({ sourceId: currentSource.id, bvid: v.bvid, partNum: v.partNum ?? null });
       triggerPlay(cfg);
     }
   };
 
   const playPrev = async () => {
     if (!currentSource) return;
-    const v = pickPrev(currentSource, config.currentBvid, config.playMode);
+    const v = pickPrev(currentSource, config.currentBvid, config.playMode, config.currentPartNum);
     if (v) {
-      const cfg = await api.setCurrent({ sourceId: currentSource.id, bvid: v.bvid });
+      const cfg = await api.setCurrent({ sourceId: currentSource.id, bvid: v.bvid, partNum: v.partNum ?? null });
       triggerPlay(cfg);
     }
   };

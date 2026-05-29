@@ -46,7 +46,7 @@ export function ContextMenu({ x, y, onClose }: Props) {
   const pickSource = async (id: string) => {
     const src = config.sources.find(s => s.id === id);
     if (!src || src.videos.length === 0) return;
-    const cfg = await api.setCurrent({ sourceId: id, bvid: src.videos[0].bvid });
+    const cfg = await api.setCurrent({ sourceId: id, bvid: src.videos[0].bvid, partNum: src.videos[0].partNum ?? null });
     triggerPlay(cfg);
     onClose();
   };
@@ -60,9 +60,9 @@ export function ContextMenu({ x, y, onClose }: Props) {
   const skip = async () => {
     const src = config.sources.find(s => s.id === config.currentSourceId);
     if (!src) return;
-    const v = pickNext(src, config.currentBvid, config.playMode);
+    const v = pickNext(src, config.currentBvid, config.playMode, config.currentPartNum);
     if (v) {
-      const cfg = await api.setCurrent({ sourceId: src.id, bvid: v.bvid });
+      const cfg = await api.setCurrent({ sourceId: src.id, bvid: v.bvid, partNum: v.partNum ?? null });
       triggerPlay(cfg);
     }
     onClose();
