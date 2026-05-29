@@ -1,10 +1,11 @@
-export type ListType = 'season' | 'series' | 'uploads';
+export type ListType = 'season' | 'series' | 'uploads' | 'parts';
 export type ListRef = { mid: string; listId: string; listType: ListType };
 // 老类型别名，保留兼容
 export type SeasonRef = { mid: string; seasonId: string };
 
 const LISTS_PATH_RE = /^\/(\d+)\/lists\/(\d+)\/?$/;
 const UPLOADS_PATH_RE = /^\/(\d+)(?:\/.*)?$/;
+const VIDEO_PATH_RE = /^\/video\/(BV[0-9A-Za-z]+)\/?$/;
 
 /**
  * 解析 B 站 UP 主列表 URL。
@@ -39,6 +40,13 @@ export function parseListURL(input: string): ListRef {
     if (uploadsMatch) {
       const mid = uploadsMatch[1];
       return { mid, listId: mid, listType: 'uploads' };
+    }
+  }
+
+  if (url.hostname === 'www.bilibili.com' || url.hostname === 'bilibili.com') {
+    const partsMatch = VIDEO_PATH_RE.exec(url.pathname);
+    if (partsMatch) {
+      return { mid: '', listId: partsMatch[1], listType: 'parts' };
     }
   }
 

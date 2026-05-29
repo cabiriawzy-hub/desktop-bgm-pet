@@ -88,4 +88,40 @@ describe('parseListURL', () => {
       listType: 'uploads',
     });
   });
+
+  it('parses a bilibili.com video URL as parts', () => {
+    const url = 'https://www.bilibili.com/video/BV1Y7411n7iM';
+    expect(parseListURL(url)).toEqual({
+      mid: '',
+      listId: 'BV1Y7411n7iM',
+      listType: 'parts',
+    });
+  });
+
+  it('parses a bilibili.com video URL with trailing slash', () => {
+    const url = 'https://www.bilibili.com/video/BV1Y7411n7iM/';
+    expect(parseListURL(url)).toEqual({
+      mid: '',
+      listId: 'BV1Y7411n7iM',
+      listType: 'parts',
+    });
+  });
+
+  it('parses a bilibili.com video URL without www', () => {
+    const url = 'https://bilibili.com/video/BV1Y7411n7iM/';
+    expect(parseListURL(url)).toEqual({
+      mid: '',
+      listId: 'BV1Y7411n7iM',
+      listType: 'parts',
+    });
+  });
+
+  it('ignores ?p= and tracking params on video URL', () => {
+    const url = 'https://www.bilibili.com/video/BV1Y7411n7iM/?p=5&spm_id_from=333.1391.0.0&vd_source=abc';
+    expect(parseListURL(url)).toEqual({
+      mid: '',
+      listId: 'BV1Y7411n7iM',
+      listType: 'parts',
+    });
+  });
 });
