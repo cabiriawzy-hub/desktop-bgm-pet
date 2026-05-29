@@ -5,10 +5,14 @@ import { fetchWbiKeys, getMixinKey, signQuery } from './wbi';
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 const PAGE_SIZE = 30;
 
-// 进程级缓存:wbi mixin key 短期内不变,避免每次 fetchUserUploads 都打 nav 一次。
-// 测试时通过 _resetWbiCache() 重置。
+// 进程级缓存:wbi mixin key + buvid3 fingerprint cookie 都是 B 站 web 端反爬
+// 用的辅助状态,短期内不变。测试时通过 _resetWbiCache() 重置。
 let cachedMixinKey: string | null = null;
-export function _resetWbiCache() { cachedMixinKey = null; }
+let cachedBuvid3: string | null = null;
+export function _resetWbiCache() {
+  cachedMixinKey = null;
+  cachedBuvid3 = null;
+}
 
 async function getCachedMixinKey(fetcher: Fetcher): Promise<string> {
   if (!cachedMixinKey) {
@@ -16,6 +20,37 @@ async function getCachedMixinKey(fetcher: Fetcher): Promise<string> {
     cachedMixinKey = getMixinKey(imgKey + subKey);
   }
   return cachedMixinKey;
+}
+
+type FingerSpiResponse = {
+  code: number;
+  data?: { b_3?: string; b_4?: string };
+};
+
+async function getCachedBuvid3(fetcher: Fetcher): Promise<string> {
+  if (!cachedBuvid3) {
+    const res = await fetcher('https://api.bilibili.com/x/frontend/finger/spi', {
+      headers: {
+        'User-Agent': UA,
+        'Referer': 'https://www.bilibili.com/',
+        'Origin': 'https://www.bilibili.com',
+      },
+    });
+    const text = await res.text();
+    let json: FingerSpiResponse;
+    try {
+      json = JSON.parse(text);
+    } catch {
+      throw new Error(
+        `B 站 finger/spi 返回非 JSON (HTTP ${res.status},前 80 字符: ${text.slice(0, 80)})`
+      );
+    }
+    if (!json.data?.b_3) {
+      throw new Error(`B 站 finger/spi 失败 (code=${json.code})`);
+    }
+    cachedBuvid3 = json.data.b_3;
+  }
+  return cachedBuvid3;
 }
 
 export type ListData = {
@@ -225,11 +260,13 @@ type SpaceArcSearchResponse = {
  */
 export async function fetchUserUploads(mid: string, fetcher: Fetcher): Promise<ListData> {
   const mixinKey = await getCachedMixinKey(fetcher);
+  const buvid3 = await getCachedBuvid3(fetcher);
 
   const headers = {
     'User-Agent': UA,
     'Referer': `https://space.bilibili.com/${mid}`,
     'Origin': 'https://space.bilibili.com',
+    'Cookie': `buvid3=${buvid3}`,
   };
 
   const videos: Video[] = [];

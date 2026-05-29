@@ -199,7 +199,12 @@ describe('fetchUserUploads', () => {
         code: 0,
         data: { wbi_img: { img_url: 'https://x/aaa.png', sub_url: 'https://x/bbb.png' } },
       }))
-      // 2. actual signed arc/search
+      // 2. finger/spi (for buvid3)
+      .mockResolvedValueOnce(mockJsonResponse({
+        code: 0,
+        data: { b_3: 'fake-buvid3-token', b_4: 'fake-buvid4-token' },
+      }))
+      // 3. actual signed arc/search
       .mockResolvedValueOnce(mockJsonResponse({
         code: 0,
         data: {
@@ -216,9 +221,10 @@ describe('fetchUserUploads', () => {
     const { fetchUserUploads } = await import('./bilibili-api');
     const result = await fetchUserUploads('3691000482499314', mockFetch);
 
-    // First call is nav, second is the actual data fetch
+    // calls: [0]=nav, [1]=finger/spi, [2]=arc/search
     expect(mockFetch.mock.calls[0][0]).toContain('/x/web-interface/nav');
-    expect(mockFetch.mock.calls[1][0]).toContain('space/wbi/arc/search');
+    expect(mockFetch.mock.calls[2][0]).toContain('space/wbi/arc/search');
+    expect(mockFetch.mock.calls[2][1].headers['Cookie']).toContain('buvid3=fake-buvid3-token');
     expect(result.videos).toEqual([
       { bvid: 'BV1aaa', title: '永远保持积极乐观的心态', duration: 18, cover: 'http://p1' },
       { bvid: 'BV1bbb', title: '想要找到心爱之人', duration: 48, cover: 'http://p2' },
@@ -249,14 +255,19 @@ describe('fetchUserUploads', () => {
         code: 0,
         data: { wbi_img: { img_url: 'https://x/aaa.png', sub_url: 'https://x/bbb.png' } },
       }))
+      // finger/spi mock
+      .mockResolvedValueOnce(mockJsonResponse({
+        code: 0,
+        data: { b_3: 'fake-buvid3-token', b_4: 'fake-buvid4-token' },
+      }))
       .mockResolvedValueOnce(mockJsonResponse({ code: 0, data: page1 }))
       .mockResolvedValueOnce(mockJsonResponse({ code: 0, data: page2 }));
 
     const { fetchUserUploads } = await import('./bilibili-api');
     const result = await fetchUserUploads('1', mockFetch);
 
-    // nav + 2 arc/search pages = 3 calls total
-    expect(mockFetch).toHaveBeenCalledTimes(3);
+    // nav + finger/spi + 2 arc/search pages = 4 calls total
+    expect(mockFetch).toHaveBeenCalledTimes(4);
     expect(result.videos).toHaveLength(35);
   });
 
@@ -267,9 +278,25 @@ describe('fetchUserUploads', () => {
         code: 0,
         data: { wbi_img: { img_url: 'https://x/aaa.png', sub_url: 'https://x/bbb.png' } },
       }))
+      // finger/spi mock
+      .mockResolvedValueOnce(mockJsonResponse({
+        code: 0,
+        data: { b_3: 'fake-buvid3-token', b_4: 'fake-buvid4-token' },
+      }))
       .mockResolvedValueOnce(mockJsonResponse({ code: -799, message: 'risk control' }));
     const { fetchUserUploads } = await import('./bilibili-api');
     await expect(fetchUserUploads('1', mockFetch)).rejects.toThrow(/-799/);
+  });
+
+  it('throws when finger/spi returns no b_3', async () => {
+    const mockFetch = vi.fn()
+      .mockResolvedValueOnce(mockJsonResponse({
+        code: 0,
+        data: { wbi_img: { img_url: 'https://x/a.png', sub_url: 'https://x/b.png' } },
+      }))
+      .mockResolvedValueOnce(mockJsonResponse({ code: -101, message: 'unauthorized' }));
+    const { fetchUserUploads } = await import('./bilibili-api');
+    await expect(fetchUserUploads('1', mockFetch)).rejects.toThrow(/finger\/spi/);
   });
 });
 
@@ -304,12 +331,16 @@ describe('fetchListArchives (dispatch)', () => {
       }))
       .mockResolvedValueOnce(mockJsonResponse({
         code: 0,
+        data: { b_3: 'fake-buvid3-token', b_4: 'fake-buvid4-token' },
+      }))
+      .mockResolvedValueOnce(mockJsonResponse({
+        code: 0,
         data: { list: { vlist: [] }, page: { pn: 1, ps: 30, count: 0 } },
       }));
     const { _resetWbiCache } = await import('./bilibili-api');
     _resetWbiCache();
     await fetchListArchives('3691000482499314', '3691000482499314', 'uploads', mockFetch);
-    expect(mockFetch.mock.calls[1][0]).toContain('space/wbi/arc/search');
+    expect(mockFetch.mock.calls[2][0]).toContain('space/wbi/arc/search');
   });
 
   it('routes listType=parts to web-interface/view', async () => {
