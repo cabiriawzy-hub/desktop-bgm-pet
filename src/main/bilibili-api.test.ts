@@ -323,24 +323,12 @@ describe('fetchListArchives (dispatch)', () => {
     expect(mockFetch.mock.calls[1][0]).toContain('series/archives');
   });
 
-  it('routes listType=uploads to space/wbi/arc/search', async () => {
-    const mockFetch = vi.fn()
-      .mockResolvedValueOnce(mockJsonResponse({
-        code: 0,
-        data: { wbi_img: { img_url: 'https://x/a.png', sub_url: 'https://x/b.png' } },
-      }))
-      .mockResolvedValueOnce(mockJsonResponse({
-        code: 0,
-        data: { b_3: 'fake-buvid3-token', b_4: 'fake-buvid4-token' },
-      }))
-      .mockResolvedValueOnce(mockJsonResponse({
-        code: 0,
-        data: { list: { vlist: [] }, page: { pn: 1, ps: 30, count: 0 } },
-      }));
-    const { _resetWbiCache } = await import('./bilibili-api');
-    _resetWbiCache();
-    await fetchListArchives('3691000482499314', '3691000482499314', 'uploads', mockFetch);
-    expect(mockFetch.mock.calls[2][0]).toContain('space/wbi/arc/search');
+  it('rejects listType=uploads with a friendly error', async () => {
+    const mockFetch = vi.fn();  // 不应该被调到
+    await expect(
+      fetchListArchives('3691000482499314', '3691000482499314', 'uploads', mockFetch)
+    ).rejects.toThrow(/UP 主投稿暂不支持/);
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
   it('routes listType=parts to web-interface/view', async () => {

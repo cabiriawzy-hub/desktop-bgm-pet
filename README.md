@@ -33,6 +33,7 @@ npm run package   # 打包成 .app
 3. 支持的 URL 格式：
    - 合集：`https://space.bilibili.com/{mid}/lists/{seasonId}?type=season`
    - 视频列表：`https://space.bilibili.com/{mid}/lists/{seriesId}?type=series`
+   - 分P 视频：`https://www.bilibili.com/video/{bvid}` (每个分P 作为一首)
    - 不支持个人收藏夹（type=collect）
 
    想直接试一下，可以粘这两个：
@@ -52,6 +53,7 @@ npm run package   # 打包成 .app
 - 自动切歌靠本地 duration 定时器估算，可能有几秒误差
 - 静音 (🔇) 只是消音，视频还在跑，到点照常切下一首
 - 添加重复 URL 不会去重
+- 不支持「UP 主投稿」URL(即裸 `space.bilibili.com/{mid}` 形式)。B 站对这条 API 加了多层反爬(wbi 签名 + buvid3 + 多种指纹参数),稳定不下来,本项目暂不维护;请用 UP 主的「合集」(`lists/{id}?type=season`)或「视频列表」(`lists/{id}?type=series`)替代
 
 ## 架构
 

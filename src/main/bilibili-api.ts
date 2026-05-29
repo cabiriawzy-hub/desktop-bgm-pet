@@ -325,7 +325,10 @@ export function fetchListArchives(
 ): Promise<ListData> {
   switch (listType) {
     case 'series':  return fetchSeriesArchives(mid, listId, fetcher);
-    case 'uploads': return fetchUserUploads(mid, fetcher);
+    case 'uploads': return Promise.reject(new Error(
+      'UP 主投稿暂不支持(B 站反爬验证 wbi+buvid3+指纹参数链条太长,稳定不下来)。'
+      + '请用 UP 主的「合集」(lists/{id}?type=season) 或「视频列表」(lists/{id}?type=series) URL 替代。'
+    ));
     case 'parts':   return fetchVideoParts(listId, fetcher);
     case 'season':
     default:        return fetchSeasonArchives(mid, listId, fetcher);
