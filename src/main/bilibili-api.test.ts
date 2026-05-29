@@ -120,6 +120,51 @@ describe('fetchSeriesArchives', () => {
   });
 });
 
+describe('fetchVideoParts', () => {
+  it('returns videos for each page of a multi-part video', async () => {
+    const mockFetch = vi.fn().mockResolvedValueOnce(mockJsonResponse({
+      code: 0,
+      data: {
+        bvid: 'BV1Y7411n7iM',
+        title: 'Improve Your English',
+        pic: 'http://cover.jpg',
+        owner: { mid: 123 },
+        pages: [
+          { cid: 11, page: 1, part: 'Improve Your English (1)', duration: 1398 },
+          { cid: 12, page: 2, part: 'Improve Your English (2)', duration: 1399 },
+          { cid: 13, page: 3, part: 'Improve Your English (3)', duration: 1402 },
+        ],
+      },
+    }));
+
+    const { fetchVideoParts } = await import('./bilibili-api');
+    const result = await fetchVideoParts('BV1Y7411n7iM', mockFetch);
+
+    expect(result.name).toBe('Improve Your English');
+    expect(result.videos).toEqual([
+      { bvid: 'BV1Y7411n7iM', title: 'Improve Your English (1)', duration: 1398, cover: 'http://cover.jpg', partNum: 1 },
+      { bvid: 'BV1Y7411n7iM', title: 'Improve Your English (2)', duration: 1399, cover: 'http://cover.jpg', partNum: 2 },
+      { bvid: 'BV1Y7411n7iM', title: 'Improve Your English (3)', duration: 1402, cover: 'http://cover.jpg', partNum: 3 },
+    ]);
+  });
+
+  it('calls the correct endpoint', async () => {
+    const mockFetch = vi.fn().mockResolvedValueOnce(mockJsonResponse({
+      code: 0,
+      data: { bvid: 'BV', title: 't', pic: 'p', owner: { mid: 1 }, pages: [] },
+    }));
+    const { fetchVideoParts } = await import('./bilibili-api');
+    await fetchVideoParts('BV1Y7411n7iM', mockFetch);
+    expect(mockFetch.mock.calls[0][0]).toContain('/x/web-interface/view?bvid=BV1Y7411n7iM');
+  });
+
+  it('throws when B 站 returns error code', async () => {
+    const mockFetch = vi.fn().mockResolvedValueOnce(mockJsonResponse({ code: -404, message: 'not found' }));
+    const { fetchVideoParts } = await import('./bilibili-api');
+    await expect(fetchVideoParts('BV', mockFetch)).rejects.toThrow(/-404/);
+  });
+});
+
 describe('fetchListArchives (dispatch)', () => {
   it('routes listType=season to season endpoint', async () => {
     const mockFetch = vi.fn().mockResolvedValueOnce(mockJsonResponse({

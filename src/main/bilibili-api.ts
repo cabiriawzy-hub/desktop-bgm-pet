@@ -132,6 +132,48 @@ export async function fetchSeriesArchives(
   return { name, videos };
 }
 
+type VideoViewResponse = {
+  code: number;
+  message?: string;
+  data?: {
+    bvid: string;
+    title: string;
+    pic: string;
+    owner: { mid: number | string };
+    pages: Array<{ cid: number; page: number; part: string; duration: number }>;
+  };
+};
+
+/**
+ * 拉取一个视频的全部分P。单次请求,不分页。
+ * 主标题作为 source name;每个分P 作为一条 Video,共享 bvid,partNum 区分。
+ */
+export async function fetchVideoParts(bvid: string, fetcher: Fetcher): Promise<ListData> {
+  const headers = {
+    'User-Agent': UA,
+    'Referer': `https://www.bilibili.com/video/${bvid}/`,
+    'Origin': 'https://www.bilibili.com',
+  };
+
+  const url = `https://api.bilibili.com/x/web-interface/view?bvid=${bvid}`;
+  const res = await fetcher(url, { headers });
+  const json = (await res.json()) as VideoViewResponse;
+
+  if (json.code !== 0 || !json.data) {
+    throw new Error(`B 站视频信息 API 失败 (code=${json.code}): ${json.message ?? 'unknown'}`);
+  }
+
+  const videos: Video[] = json.data.pages.map(p => ({
+    bvid: json.data!.bvid,
+    title: p.part,
+    duration: p.duration,
+    cover: json.data!.pic,
+    partNum: p.page,
+  }));
+
+  return { name: json.data.title, videos };
+}
+
 /** 多态：根据 listType 路由到对应的实现。 */
 export function fetchListArchives(
   mid: string,
