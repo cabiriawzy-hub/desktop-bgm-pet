@@ -11,6 +11,7 @@ export default function App() {
   const hydrate = useStore(s => s.hydrate);
   const mode = useStore(s => s.config.windowState.mode);
   const currentBvid = useStore(s => s.config.currentBvid);
+  const currentPartNum = useStore(s => s.config.currentPartNum);
   const playEpoch = useStore(s => s.playEpoch);
 
   useEffect(() => { hydrate(); }, [hydrate]);
@@ -47,7 +48,7 @@ export default function App() {
           zIndex: 0,
           background: 'rgba(10, 10, 20, 0.3)',  // 透明视频后面的轻微深色衬底
         }}>
-          <BilibiliFrame bvid={currentBvid} epoch={playEpoch} />
+          <BilibiliFrame bvid={currentBvid} partNum={currentPartNum} epoch={playEpoch} />
         </div>
       )}
 

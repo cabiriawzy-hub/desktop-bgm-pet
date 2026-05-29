@@ -4,7 +4,7 @@ import type { WebviewTag } from 'electron';
 import { playerRef } from '../playerRef';
 import { useStore } from '../state';
 
-type Props = { bvid: string; epoch: number };
+type Props = { bvid: string; partNum: number | null; epoch: number };
 
 // 隐藏 B 站自带 chrome,同时强制视频铺满。
 //
@@ -165,10 +165,11 @@ const HIDE_CHROME_JS = `(() => {
   return 'injected';
 })()`;
 
-export function BilibiliFrame({ bvid, epoch }: Props) {
+export function BilibiliFrame({ bvid, partNum, epoch }: Props) {
   const ref = useRef<WebviewTag>(null);
   const opacity = useStore(s => s.config.playerOpacity);
-  const src = `https://player.bilibili.com/player.html?bvid=${bvid}&autoplay=1&danmaku=0&hideCoverInfo=1`;
+  const partSuffix = partNum != null ? `&p=${partNum}` : '';
+  const src = `https://player.bilibili.com/player.html?bvid=${bvid}${partSuffix}&autoplay=1&danmaku=0&hideCoverInfo=1`;
 
   useEffect(() => {
     const view = ref.current;
@@ -188,13 +189,13 @@ export function BilibiliFrame({ bvid, epoch }: Props) {
       view.removeEventListener('dom-ready', onDomReady);
       playerRef.set(null);
     };
-  }, [bvid, epoch]);
+  }, [bvid, partNum, epoch]);
 
   return (
     // 注意：<webview> 必须显式 width/height 属性（CSS 单独 width:100% 会让它折叠）
     <webview
       ref={ref}
-      key={`${bvid}-${epoch}`}
+      key={`${bvid}-p${partNum ?? 0}-${epoch}`}
       src={src}
       allowpopups={undefined as any}
       style={{
