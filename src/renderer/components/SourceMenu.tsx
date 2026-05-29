@@ -29,6 +29,7 @@ export function SourceMenu({ onClose }: Props) {
   const [adding, setAdding] = useState(false);
   const [url, setUrl] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [newCategory, setNewCategory] = useState<'music' | 'learning'>('music');
   const sources = useStore(s => s.config.sources);
   const currentSourceId = useStore(s => s.config.currentSourceId);
   const currentBvid = useStore(s => s.config.currentBvid);
@@ -37,9 +38,9 @@ export function SourceMenu({ onClose }: Props) {
 
   const currentSource = sources.find(s => s.id === currentSourceId);
 
-  const pickTrack = async (bvid: string) => {
+  const pickTrack = async (bvid: string, partNum: number | null) => {
     if (!currentSource) return;
-    const cfg = await api.setCurrent({ sourceId: currentSource.id, bvid });
+    const cfg = await api.setCurrent({ sourceId: currentSource.id, bvid, partNum });
     triggerPlay(cfg);
     onClose();
   };
@@ -47,7 +48,8 @@ export function SourceMenu({ onClose }: Props) {
   const switchSource = async (sourceId: string) => {
     const src = sources.find(s => s.id === sourceId);
     if (!src || src.videos.length === 0) return;
-    const cfg = await api.setCurrent({ sourceId, bvid: src.videos[0].bvid });
+    const first = src.videos[0];
+    const cfg = await api.setCurrent({ sourceId, bvid: first.bvid, partNum: first.partNum ?? null });
     triggerPlay(cfg);
     setView('tracks');
     onClose();
@@ -57,11 +59,12 @@ export function SourceMenu({ onClose }: Props) {
     setError(null);
     try {
       const prevCurrent = useStore.getState().config.currentBvid;
-      const cfg = await api.addSource({ url: url.trim() });
+      const cfg = await api.addSource({ url: url.trim(), category: newCategory });
       if (!prevCurrent && cfg.currentBvid) triggerPlay(cfg);
       else setConfig(cfg);
       setUrl('');
       setAdding(false);
+      setNewCategory('music');  // reset for next add
     } catch (e: any) {
       setError(e.message || String(e));
     }
@@ -167,7 +170,7 @@ export function SourceMenu({ onClose }: Props) {
             return (
               <div
                 key={v.bvid}
-                onClick={() => pickTrack(v.bvid)}
+                onClick={() => pickTrack(v.bvid, v.partNum ?? null)}
                 title={v.title}
                 style={rowStyle(active)}
               >
@@ -248,32 +251,52 @@ export function SourceMenu({ onClose }: Props) {
           >+ 粘贴 URL 添加合集</div>
         ) : (
           <div style={{ padding: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <input
-              type="text"
-              value={url}
-              onChange={e => setUrl(e.target.value)}
-              placeholder="space.bilibili.com/.../lists/...?type=season"
-              style={{
-                width: '100%', padding: '5px 8px', fontSize: 11,
-                background: 'rgba(255,255,255,0.08)',
-                border: '1px solid rgba(255,255,255,0.15)',
-                borderRadius: 4, color: '#fff', outline: 'none',
-              }}
-              autoFocus
-            />
-            <div style={{ display: 'flex', gap: 6 }}>
-              <button onClick={onAdd} style={{
-                flex: 1, padding: '5px 0', fontSize: 11,
-                background: '#5cb6ff', color: '#fff',
-                border: 'none', borderRadius: 4, cursor: 'pointer',
-              }}>添加</button>
-              <button onClick={() => { setAdding(false); setError(null); }} style={{
-                padding: '5px 10px', fontSize: 11,
-                background: 'rgba(255,255,255,0.1)', color: '#fff',
-                border: 'none', borderRadius: 4, cursor: 'pointer',
-              }}>取消</button>
-            </div>
-            {error && <div style={{ fontSize: 10, color: '#ff7878' }}>{error}</div>}
+              <div style={{ display: 'flex', gap: 4 }}>
+                <button
+                  onClick={() => setNewCategory('music')}
+                  style={{
+                    flex: 1, padding: '4px 0', fontSize: 11,
+                    background: newCategory === 'music' ? 'rgba(92,182,255,0.25)' : 'rgba(255,255,255,0.06)',
+                    color: newCategory === 'music' ? '#5cb6ff' : 'rgba(255,255,255,0.75)',
+                    border: 'none', borderRadius: 4, cursor: 'pointer',
+                  }}
+                >🎵 音乐</button>
+                <button
+                  onClick={() => setNewCategory('learning')}
+                  style={{
+                    flex: 1, padding: '4px 0', fontSize: 11,
+                    background: newCategory === 'learning' ? 'rgba(92,182,255,0.25)' : 'rgba(255,255,255,0.06)',
+                    color: newCategory === 'learning' ? '#5cb6ff' : 'rgba(255,255,255,0.75)',
+                    border: 'none', borderRadius: 4, cursor: 'pointer',
+                  }}
+                >📖 英文学习</button>
+              </div>
+              <input
+                type="text"
+                value={url}
+                onChange={e => setUrl(e.target.value)}
+                placeholder="space.bilibili.com/... 或 bilibili.com/video/BV..."
+                style={{
+                  width: '100%', padding: '5px 8px', fontSize: 11,
+                  background: 'rgba(255,255,255,0.08)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  borderRadius: 4, color: '#fff', outline: 'none',
+                }}
+                autoFocus
+              />
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button onClick={onAdd} style={{
+                  flex: 1, padding: '5px 0', fontSize: 11,
+                  background: '#5cb6ff', color: '#fff',
+                  border: 'none', borderRadius: 4, cursor: 'pointer',
+                }}>添加</button>
+                <button onClick={() => { setAdding(false); setError(null); }} style={{
+                  padding: '5px 10px', fontSize: 11,
+                  background: 'rgba(255,255,255,0.1)', color: '#fff',
+                  border: 'none', borderRadius: 4, cursor: 'pointer',
+                }}>取消</button>
+              </div>
+              {error && <div style={{ fontSize: 10, color: '#ff7878' }}>{error}</div>}
           </div>
         )}
       </div>
